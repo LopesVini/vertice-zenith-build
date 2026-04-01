@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import heroImage from "@/assets/hero-blueprint.jpg";
+import logo from "@/assets/logo-vertice.png";
 
 const rotatingPhrases = [
   "Menos erros.",
