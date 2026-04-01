@@ -6,7 +6,7 @@ const Footer = () => (
     <div className="container-tight">
       <div className="grid md:grid-cols-3 gap-12">
         <div>
-          <img src={logo} alt="Vértice" className="h-12 w-auto brightness-0 invert mb-4" />
+          <img src={logo} alt="Vértice" className="h-16 w-auto brightness-0 invert mb-4" />
           <p className="text-primary-foreground/50 text-sm leading-relaxed max-w-xs">
             Projetos residenciais com técnica, clareza e segurança. Belo Horizonte e região.
           </p>
