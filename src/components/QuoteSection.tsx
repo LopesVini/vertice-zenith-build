@@ -1,6 +1,7 @@
 import { motion, useInView } from "framer-motion";
 import { useRef, useState } from "react";
 import { MessageCircle } from "lucide-react";
+import { supabase } from "@/lib/supabase";
 
 const phases = ["Ideia", "Anteprojeto", "Projeto", "Obra", "Reforma", "Regularização"];
 const projectTypes = ["Projeto Arquitetônico", "Projeto Elétrico", "Projeto Hidrossanitário", "Compatibilização", "Consultoria Técnica"];
@@ -9,9 +10,36 @@ const QuoteSection = () => {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-80px" });
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setLoading(true);
+    setError("");
+
+    const form = e.currentTarget;
+    const formData = new FormData(form);
+
+    const { error: dbError } = await supabase.from("Orçamentos").insert({
+      nome: formData.get("nome") as string,
+      email: formData.get("email") as string,
+      celular: formData.get("celular") as string,
+      cidade: formData.get("cidade") as string,
+      tipo: formData.get("tipo") as string,
+      area: formData.get("area") as string,
+      fase: formData.get("fase") as string,
+      mensagem: formData.get("mensagem") as string,
+    });
+
+    setLoading(false);
+
+    if (dbError) {
+      setError("Erro ao enviar. Tente novamente.");
+      console.error(dbError);
+      return;
+    }
+
     setSubmitted(true);
   };
 
@@ -45,6 +73,7 @@ const QuoteSection = () => {
               <form onSubmit={handleSubmit} className="mt-8 space-y-5">
                 <div className="grid sm:grid-cols-2 gap-5">
                   <input
+                    name="nome"
                     type="text"
                     placeholder="Nome"
                     required
@@ -52,6 +81,7 @@ const QuoteSection = () => {
                     className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent/30"
                   />
                   <input
+                    name="email"
                     type="email"
                     placeholder="E-mail"
                     required
@@ -61,6 +91,7 @@ const QuoteSection = () => {
                 </div>
                 <div className="grid sm:grid-cols-2 gap-5">
                   <input
+                    name="celular"
                     type="tel"
                     placeholder="WhatsApp"
                     required
@@ -68,6 +99,7 @@ const QuoteSection = () => {
                     className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent/30"
                   />
                   <input
+                    name="cidade"
                     type="text"
                     placeholder="Cidade"
                     required
@@ -77,6 +109,7 @@ const QuoteSection = () => {
                 </div>
                 <div className="grid sm:grid-cols-2 gap-5">
                   <select
+                    name="tipo"
                     required
                     className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-accent/30"
                   >
@@ -86,6 +119,7 @@ const QuoteSection = () => {
                     ))}
                   </select>
                   <input
+                    name="area"
                     type="text"
                     placeholder="Área aproximada (m²)"
                     maxLength={20}
@@ -93,6 +127,7 @@ const QuoteSection = () => {
                   />
                 </div>
                 <select
+                  name="fase"
                   required
                   className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-accent/30"
                 >
@@ -102,16 +137,21 @@ const QuoteSection = () => {
                   ))}
                 </select>
                 <textarea
+                  name="mensagem"
                   placeholder="Mensagem (opcional)"
                   rows={4}
                   maxLength={1000}
                   className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent/30 resize-none"
                 />
+                {error && (
+                  <p className="text-red-500 text-sm">{error}</p>
+                )}
                 <button
                   type="submit"
-                  className="w-full bg-accent text-accent-foreground py-4 rounded-lg text-lg font-bold hover:opacity-90 transition-opacity shadow-lg shadow-accent/20"
+                  disabled={loading}
+                  className="w-full bg-accent text-accent-foreground py-4 rounded-lg text-lg font-bold hover:opacity-90 transition-opacity shadow-lg shadow-accent/20 disabled:opacity-50"
                 >
-                  Enviar solicitação
+                  {loading ? "Enviando..." : "Enviar solicitação"}
                 </button>
               </form>
             )}
