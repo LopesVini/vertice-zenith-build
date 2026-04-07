@@ -44,15 +44,6 @@ const HeroSection = () => {
             transition={{ duration: 0.8 }}
             className="space-y-8"
           >
-            {/* Logo */}
-            <motion.img
-              src={logo}
-              alt="Vértice Projetos"
-              className="h-36 md:h-40 w-auto mb-4"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.6 }}
-            />
 
             {/* Rotating phrase */}
             <div className="h-10 overflow-hidden">
