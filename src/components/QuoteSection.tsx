@@ -1,10 +1,41 @@
 import { motion, useInView } from "framer-motion";
 import { useRef, useState } from "react";
-import { MessageCircle } from "lucide-react";
+import { MessageCircle, Sparkles, Loader2, Check } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 const phases = ["Ideia", "Anteprojeto", "Projeto", "Obra", "Reforma", "Regularização"];
-const projectTypes = ["Projeto Arquitetônico", "Projeto Elétrico", "Projeto Hidrossanitário", "Compatibilização", "Consultoria Técnica"];
+const projectTypes = [
+  "Projeto Arquitetônico",
+  "Projeto Estrutural",
+  "Projeto Elétrico",
+  "Projeto Hidrossanitário",
+  "Compatibilização",
+  "Consultoria Técnica",
+];
+
+const GROQ_KEY = import.meta.env.VITE_GROQ_API_KEY as string;
+
+async function improveText(text: string): Promise<string> {
+  const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${GROQ_KEY}`,
+    },
+    body: JSON.stringify({
+      model: "llama-3.3-70b-versatile",
+      messages: [
+        {
+          role: "user",
+          content: `Corrija erros de português e melhore a coesão do texto a seguir, mantendo o sentido original e o tom do autor. Retorne apenas o texto corrigido, sem explicações.\n\n${text}`,
+        },
+      ],
+      temperature: 0.3,
+    }),
+  });
+  const data = await res.json();
+  return data.choices?.[0]?.message?.content?.trim() ?? text;
+}
 
 const QuoteSection = () => {
   const ref = useRef(null);
@@ -12,9 +43,35 @@ const QuoteSection = () => {
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
+  const [mensagem, setMensagem] = useState("");
+  const [improvingText, setImprovingText] = useState(false);
+
+  const toggleType = (type: string) => {
+    setSelectedTypes((prev) =>
+      prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]
+    );
+  };
+
+  const handleImprove = async () => {
+    if (!mensagem.trim() || improvingText) return;
+    setImprovingText(true);
+    try {
+      const improved = await improveText(mensagem);
+      setMensagem(improved);
+    } catch {
+      // silently fail — user's original text stays
+    } finally {
+      setImprovingText(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (selectedTypes.length === 0) {
+      setError("Selecione ao menos um tipo de projeto.");
+      return;
+    }
     setLoading(true);
     setError("");
 
@@ -26,10 +83,10 @@ const QuoteSection = () => {
       email: formData.get("email") as string,
       celular: formData.get("celular") as string,
       cidade: formData.get("cidade") as string,
-      tipo: formData.get("tipo") as string,
+      tipo: selectedTypes.join(", "),
       area: formData.get("area") as string,
       fase: formData.get("fase") as string,
-      mensagem: formData.get("mensagem") as string,
+      mensagem,
     });
 
     setLoading(false);
@@ -107,17 +164,35 @@ const QuoteSection = () => {
                     className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent/30"
                   />
                 </div>
+
+                {/* Multi-select tipo de projeto */}
+                <div>
+                  <p className="text-sm text-muted-foreground mb-3">
+                    Tipo de projeto <span className="text-accent">*</span>
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {projectTypes.map((type) => {
+                      const selected = selectedTypes.includes(type);
+                      return (
+                        <button
+                          key={type}
+                          type="button"
+                          onClick={() => toggleType(type)}
+                          className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-lg border text-sm font-medium transition-all ${
+                            selected
+                              ? "border-accent bg-accent/10 text-accent"
+                              : "border-border bg-background text-muted-foreground hover:border-accent/40 hover:text-foreground"
+                          }`}
+                        >
+                          {selected && <Check size={13} strokeWidth={2.5} />}
+                          {type}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
                 <div className="grid sm:grid-cols-2 gap-5">
-                  <select
-                    name="tipo"
-                    required
-                    className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-accent/30"
-                  >
-                    <option value="">Tipo de projeto</option>
-                    {projectTypes.map((t) => (
-                      <option key={t} value={t}>{t}</option>
-                    ))}
-                  </select>
                   <input
                     name="area"
                     type="text"
@@ -125,24 +200,46 @@ const QuoteSection = () => {
                     maxLength={20}
                     className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent/30"
                   />
+                  <select
+                    name="fase"
+                    required
+                    className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-accent/30"
+                  >
+                    <option value="">Fase atual do projeto</option>
+                    {phases.map((p) => (
+                      <option key={p} value={p}>{p}</option>
+                    ))}
+                  </select>
                 </div>
-                <select
-                  name="fase"
-                  required
-                  className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-accent/30"
-                >
-                  <option value="">Fase atual do projeto</option>
-                  {phases.map((p) => (
-                    <option key={p} value={p}>{p}</option>
-                  ))}
-                </select>
-                <textarea
-                  name="mensagem"
-                  placeholder="Mensagem (opcional)"
-                  rows={4}
-                  maxLength={1000}
-                  className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent/30 resize-none"
-                />
+
+                {/* Textarea com botão IA */}
+                <div className="relative">
+                  <textarea
+                    name="mensagem"
+                    placeholder="Mensagem (opcional)"
+                    rows={4}
+                    maxLength={1000}
+                    value={mensagem}
+                    onChange={(e) => setMensagem(e.target.value)}
+                    className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent/30 resize-none pb-10"
+                  />
+                  {mensagem.trim().length > 0 && (
+                    <button
+                      type="button"
+                      onClick={handleImprove}
+                      disabled={improvingText}
+                      className="absolute bottom-3 right-3 inline-flex items-center gap-1 text-xs text-accent hover:opacity-70 transition-opacity disabled:opacity-40"
+                    >
+                      {improvingText ? (
+                        <Loader2 size={12} className="animate-spin" />
+                      ) : (
+                        <Sparkles size={12} />
+                      )}
+                      {improvingText ? "Melhorando..." : "Melhorar com IA"}
+                    </button>
+                  )}
+                </div>
+
                 {error && (
                   <p className="text-red-500 text-sm">{error}</p>
                 )}

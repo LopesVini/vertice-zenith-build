@@ -1,80 +1,108 @@
+import { useEffect, useRef } from "react";
+import gsap from "gsap";
+import { ArrowUpRight } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
-import project1 from "@/assets/project-placeholder-1.jpg";
-import project2 from "@/assets/project-placeholder-2.jpg";
-import project3 from "@/assets/project-placeholder-3.jpg";
 
-const allProjects = [
-  { image: project1, title: "Residência Alphaville", type: "Projeto Arquitetônico + Elétrico", desc: "Residência contemporânea com integração total entre espaços internos e externos." },
-  { image: project2, title: "Casa Jardim Europa", type: "Projeto Completo", desc: "Projeto residencial com foco em iluminação natural e conforto térmico." },
-  { image: project3, title: "Residência Pampulha", type: "Projeto Arquitetônico + Hidrossanitário", desc: "Residência de alto padrão com sistema hidráulico otimizado." },
-  { image: project1, title: "Casa Mangabeiras", type: "Projeto Arquitetônico", desc: "Residência em terreno inclinado com aproveitamento máximo do desnível." },
-  { image: project2, title: "Residência Belvedere", type: "Projeto Elétrico + Hidrossanitário", desc: "Reforma completa das instalações com adequação às normas atuais." },
-  { image: project3, title: "Casa Vila da Serra", type: "Projeto Completo", desc: "Projeto integrado para residência de alto padrão em condomínio fechado." },
+// Imagens de exemplo do Unsplash conforme solicitado
+const projects = [
+  {
+    id: 1,
+    title: "Residência Alphaville",
+    category: "Projeto Completo",
+    image: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?q=80&w=2075&auto=format&fit=crop",
+    desc: "Integração total entre arquitetura moderna e rigor estrutural em um terreno com declive acentuado."
+  },
+  {
+    id: 2,
+    title: "Casa Vila da Serra",
+    category: "Projeto Estrutural",
+    image: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?q=80&w=2070&auto=format&fit=crop",
+    desc: "Cálculo estrutural avançado para vãos livres de 12 metros, garantindo a estética desejada pelo cliente."
+  },
+  {
+    id: 3,
+    title: "Complexo Retiro das Pedras",
+    category: "Compatibilização",
+    image: "https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?q=80&w=2070&auto=format&fit=crop",
+    desc: "Compatibilização completa de projetos em uma área de preservação com rigorosas normas de prefeitura."
+  },
+  {
+    id: 4,
+    title: "Residência Pampulha",
+    category: "Projeto Arquitetônico",
+    image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=2070&auto=format&fit=crop",
+    desc: "Arquitetura contemporânea pensada para ventilação cruzada e eficiência energética."
+  }
 ];
 
-const Projetos = () => (
-  <>
-    <Navbar />
-    <main className="pt-20">
-      <section className="section-padding bg-background">
-        <div className="container-tight">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="mb-16"
-          >
-            <span className="text-accent text-sm font-semibold tracking-widest uppercase">Portfólio</span>
-            <h1 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-foreground mt-4">
-              Nossos projetos
-            </h1>
-            <p className="text-muted-foreground text-lg mt-4 max-w-2xl">
-              Conheça alguns dos projetos desenvolvidos pela Vértice. Cada trabalho reflete nosso compromisso com clareza, técnica e execução.
-            </p>
-          </motion.div>
+const Projetos = () => {
+  const containerRef = useRef<HTMLDivElement>(null);
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {allProjects.map((proj, i) => (
-              <motion.div
-                key={proj.title}
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: i * 0.08 }}
-                className="group cursor-pointer"
-              >
-                <div className="overflow-hidden rounded-xl">
-                  <img
-                    src={proj.image}
-                    alt={proj.title}
-                    className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-500"
-                    loading="lazy"
-                    width={800}
-                    height={600}
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      gsap.from(".project-card", {
+        y: 50,
+        opacity: 0,
+        duration: 0.8,
+        stagger: 0.2,
+        ease: "power2.out",
+        delay: 0.2
+      });
+    }, containerRef);
+    return () => ctx.revert();
+  }, []);
+
+  return (
+    <div className="bg-background min-h-screen text-foreground antialiased selection:bg-accent/30 selection:text-accent-foreground">
+      <Navbar />
+      
+      <main className="pt-40 pb-32 px-6 md:px-12 lg:px-24 min-h-[90vh]">
+        <div className="max-w-7xl mx-auto" ref={containerRef}>
+          <div className="mb-16">
+            <span className="font-mono text-xs uppercase tracking-widest text-accent">Portfólio</span>
+            <h1 className="font-sans font-extrabold text-4xl md:text-5xl lg:text-6xl mt-4 text-foreground leading-tight">
+              Obras que assinam <br/>nossa precisão.
+            </h1>
+            <p className="text-muted-foreground text-lg mt-6 max-w-2xl">
+              Confira alguns de nossos projetos modelo (Imagens de exemplo). Mais do que estética, entregamos engenharia que funciona na vida real.
+            </p>
+          </div>
+          
+          <div className="grid md:grid-cols-2 gap-8 md:gap-12">
+            {projects.map((project) => (
+              <div key={project.id} className="project-card group cursor-pointer">
+                <div className="relative overflow-hidden rounded-[2rem] aspect-[4/3] bg-surface mb-6 border border-border">
+                  <img 
+                    src={project.image} 
+                    alt={project.title}
+                    className="w-full h-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.25,0.46,0.45,0.94)] group-hover:scale-105"
                   />
+                  <div className="absolute inset-0 bg-navy-dark/0 group-hover:bg-navy-dark/40 transition-colors duration-500 flex items-center justify-center">
+                    <div className="w-16 h-16 rounded-full bg-accent text-accent-foreground flex items-center justify-center opacity-0 transform translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-500 ease-out">
+                      <ArrowUpRight size={28} />
+                    </div>
+                  </div>
                 </div>
-                <span className="text-accent text-xs font-semibold tracking-wider uppercase mt-4 block">{proj.type}</span>
-                <h3 className="text-foreground font-bold text-xl mt-1">{proj.title}</h3>
-                <p className="text-muted-foreground text-sm mt-2">{proj.desc}</p>
-              </motion.div>
+                
+                <div className="px-2">
+                  <span className="font-mono text-xs text-accent uppercase tracking-widest">{project.category}</span>
+                  <h3 className="font-sans font-bold text-2xl text-foreground mt-2 group-hover:text-accent transition-colors">
+                    {project.title}
+                  </h3>
+                  <p className="text-muted-foreground mt-3 leading-relaxed">
+                    {project.desc}
+                  </p>
+                </div>
+              </div>
             ))}
           </div>
-
-          <div className="text-center mt-16">
-            <Link
-              to="/orcamento"
-              className="inline-block bg-accent text-accent-foreground px-10 py-4 rounded-lg text-lg font-bold hover:opacity-90 transition-opacity shadow-lg shadow-accent/20"
-            >
-              Solicitar orçamento
-            </Link>
-          </div>
         </div>
-      </section>
-    </main>
-    <Footer />
-  </>
-);
+      </main>
+
+      <Footer />
+    </div>
+  );
+};
 
 export default Projetos;

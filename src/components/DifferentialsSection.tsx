@@ -1,6 +1,6 @@
 import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
-import { Target, Eye, Layers, MessageCircle, Home, CheckCircle, Users, BookOpen } from "lucide-react";
+import { Target, Eye, Layers, MessageCircle, Home, Users, Building2, MapPin } from "lucide-react";
 
 const differentials = [
   { icon: Target, title: "Foco em execução real", desc: "Projetos pensados para a obra, não para a gaveta." },
@@ -8,9 +8,9 @@ const differentials = [
   { icon: Layers, title: "Compatibilização entre disciplinas", desc: "Arquitetura, elétrica e hidráulica alinhados." },
   { icon: MessageCircle, title: "Atendimento direto", desc: "Comunicação objetiva, sem intermediários." },
   { icon: Home, title: "Foco em residências", desc: "Especialidade no que fazemos de melhor." },
-  { icon: CheckCircle, title: "Cuidado com detalhes", desc: "Cada detalhe importa na qualidade final." },
+  { icon: Building2, title: "Estrutural com rigor de grande porte", desc: "Engenheiro com histórico em obras de grande porte — onde imprecisão não é opção. Esse padrão de exigência aplicado a residências resulta em estruturas calculadas com precisão real." },
   { icon: Users, title: "Comunicação fácil", desc: "WhatsApp, e-mail e reuniões presenciais." },
-  { icon: BookOpen, title: "Base técnica sólida", desc: "Fundamento técnico em cada decisão de projeto." },
+  { icon: MapPin, title: "Projeto feito para o município", desc: "Conhecemos os Códigos de Obras e as exigências documentais de BH, Nova Lima e Contagem. A compatibilização com as normas locais faz parte do processo desde a concepção." },
 ];
 
 const DifferentialsSection = () => {

@@ -1,13 +1,18 @@
 import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
 import { Link } from "react-router-dom";
-import { PenTool, Zap, Droplets, Layers, HelpCircle } from "lucide-react";
+import { PenTool, Zap, Droplets, Layers, HelpCircle, Building2 } from "lucide-react";
 
 const services = [
   {
     icon: PenTool,
     title: "Projeto Arquitetônico",
     desc: "Desenvolvimento de soluções funcionais e estéticas para residências, do conceito à documentação executiva.",
+  },
+  {
+    icon: Building2,
+    title: "Projeto Estrutural",
+    desc: "Dimensionamento estrutural conduzido por engenheiro com CREA e experiência em estruturas de grande porte — pontes e obras que exigem cálculo preciso e responsabilidade técnica elevada. Esse mesmo padrão aplicado à sua residência.",
   },
   {
     icon: Zap,

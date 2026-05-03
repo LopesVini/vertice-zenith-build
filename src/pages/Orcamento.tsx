@@ -1,15 +1,21 @@
+import { useEffect } from "react";
 import Navbar from "@/components/Navbar";
-import QuoteSection from "@/components/QuoteSection";
+import GetStarted from "@/components/GetStarted";
 import Footer from "@/components/Footer";
 
-const Orcamento = () => (
-  <>
-    <Navbar />
-    <main className="pt-20">
-      <QuoteSection />
-    </main>
-    <Footer />
-  </>
-);
+const Orcamento = () => {
+  useEffect(() => {
+  }, []);
+
+  return (
+    <div className="bg-background min-h-screen text-foreground antialiased">
+      <Navbar />
+      <main className="pt-20">
+        <GetStarted />
+      </main>
+      <Footer />
+    </div>
+  );
+};
 
 export default Orcamento;

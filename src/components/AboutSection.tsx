@@ -22,10 +22,10 @@ const AboutSection = () => {
             Engenharia focada em projetos residenciais bem feitos.
           </h2>
           <p className="text-muted-foreground text-lg md:text-xl leading-relaxed mt-6">
-            A Vértice nasce com o propósito de desenvolver projetos residenciais com clareza técnica, estética e foco na execução. Nossa atuação envolve arquitetura, instalações elétricas e hidrossanitárias, sempre buscando soluções organizadas, compatíveis e pensadas para o dia a dia da obra.
+            A Vértice desenvolve projetos residenciais com clareza técnica e foco na execução. Atuamos em arquitetura, projetos estruturais, instalações elétricas e hidrossanitárias — disciplinas compatíveis entre si e prontas para a obra desde o início.
           </p>
           <p className="text-muted-foreground text-lg leading-relaxed mt-4">
-            Com base em Belo Horizonte e região, atuamos com atendimento direto, comunicação clara e atenção a cada detalhe do seu projeto.
+            O projeto estrutural é conduzido por engenheiro com CREA e experiência em estruturas de grande porte. Com base na Região Metropolitana de Belo Horizonte, atendemos Belo Horizonte, Nova Lima e Contagem, e conhecemos as particularidades de aprovação de cada prefeitura — o projeto já chega ao protocolo alinhado com as exigências do município certo.
           </p>
         </motion.div>
       </div>
