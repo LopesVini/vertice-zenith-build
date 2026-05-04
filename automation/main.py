@@ -5,6 +5,7 @@ import json
 import os
 import datetime
 from fastapi import FastAPI, Request, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from tools.generate_response import generate_response
 from tools.send_client_email import send_client_email
 from tools.log_to_sheets import log_to_sheets
@@ -12,7 +13,15 @@ from tools.notify_team_email import notify_team_email
 
 app = FastAPI()
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["POST", "GET"],
+    allow_headers=["*"],
+)
+
 WEBHOOK_SECRET = os.getenv("SUPABASE_WEBHOOK_SECRET")
+AUTOMATION_API_KEY = os.getenv("AUTOMATION_API_KEY")
 
 
 @app.post("/webhook/supabase")
@@ -41,6 +50,26 @@ async def handle_webhook(request: Request):
     notify_team_email(record)
 
     _log(f"Lead processado: {record.get('nome')} — {record.get('email')}")
+    return {"status": "ok"}
+
+
+@app.post("/process-quote")
+async def process_quote(request: Request):
+    api_key = request.headers.get("x-api-key")
+    if api_key != AUTOMATION_API_KEY:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
+    try:
+        record = await request.json()
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid JSON")
+
+    email_body = generate_response(record)
+    send_client_email(record, email_body)
+    log_to_sheets(record)
+    notify_team_email(record)
+
+    _log(f"Lead processado (form direto): {record.get('nome')} — {record.get('email')}")
     return {"status": "ok"}
 
 
