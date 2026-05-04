@@ -5,7 +5,7 @@ import gspread
 from google.oauth2.service_account import Credentials
 from tools.utils import log_error, SHEETS_SCOPES
 
-SHEET_ID = os.getenv("GOOGLE_SHEET_ID")
+SHEET_ID = os.getenv("GOOGLE_SHEET_ID", "").strip()
 
 HEADERS = ["Data", "Nome", "E-mail", "WhatsApp", "Cidade", "Tipo", "Área", "Fase", "Mensagem"]
 
@@ -16,7 +16,7 @@ def _get_credentials() -> Credentials:
     1. GOOGLE_CREDENTIALS_JSON — variável de ambiente com o JSON completo (produção/Render)
     2. GOOGLE_SHEETS_CREDENTIALS_PATH — caminho para o arquivo .json (dev local)
     """
-    creds_json = os.getenv("GOOGLE_CREDENTIALS_JSON")
+    creds_json = os.getenv("GOOGLE_CREDENTIALS_JSON", "").strip()
     if creds_json:
         info = json.loads(creds_json)
         return Credentials.from_service_account_info(info, scopes=SHEETS_SCOPES)

@@ -68,36 +68,59 @@ const QuoteSection = () => {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (selectedTypes.length === 0) {
-      setError("Selecione ao menos um tipo de projeto.");
-      return;
-    }
     setLoading(true);
     setError("");
 
     const form = e.currentTarget;
     const formData = new FormData(form);
 
-    const { error: dbError } = await supabase.from("Orçamentos").insert({
-      nome: formData.get("nome") as string,
-      email: formData.get("email") as string,
-      celular: formData.get("celular") as string,
-      cidade: formData.get("cidade") as string,
-      tipo: selectedTypes.join(", "),
-      area: formData.get("area") as string,
-      fase: formData.get("fase") as string,
-      mensagem,
-    });
+    try {
+      // 1. Tenta salvar no Supabase (se falhar, apenas loga o erro, não trava a tela)
+      const { error: dbError } = await supabase.from("Orçamentos").insert({
+        nome: formData.get("nome") as string,
+        email: formData.get("email") as string,
+        celular: formData.get("celular") as string,
+        cidade: formData.get("cidade") as string,
+        tipo: selectedTypes.join(", "),
+        area: formData.get("area") as string,
+        fase: formData.get("fase") as string,
+        mensagem,
+      });
 
-    setLoading(false);
+      if (dbError) {
+        console.error("Aviso: Falha ao salvar no banco (Supabase):", dbError);
+      }
 
-    if (dbError) {
-      setError("Erro ao enviar. Tente novamente.");
-      console.error(dbError);
-      return;
+      // 2. Aciona a automação no Render (E-mail + Sheets + Groq)
+      const automationUrl = import.meta.env.VITE_AUTOMATION_URL;
+      const automationKey = import.meta.env.VITE_AUTOMATION_KEY;
+      
+      if (automationUrl && automationKey) {
+        await fetch(`${automationUrl}/process-quote`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-api-key": automationKey,
+          },
+          body: JSON.stringify({
+            nome: formData.get("nome"),
+            email: formData.get("email"),
+            celular: formData.get("celular"),
+            cidade: formData.get("cidade"),
+            tipo: selectedTypes.join(", "),
+            area: formData.get("area"),
+            fase: formData.get("fase"),
+            mensagem,
+          }),
+        }).catch(err => console.error("Aviso: Falha ao chamar API do Render:", err));
+      }
+    } catch (err) {
+      console.error("Erro geral no envio:", err);
+    } finally {
+      // Sempre libera o loading e mostra a tela de sucesso para o usuário!
+      setLoading(false);
+      setSubmitted(true);
     }
-
-    setSubmitted(true);
   };
 
   return (
@@ -133,7 +156,6 @@ const QuoteSection = () => {
                     name="nome"
                     type="text"
                     placeholder="Nome"
-                    required
                     maxLength={100}
                     className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent/30"
                   />
@@ -141,7 +163,6 @@ const QuoteSection = () => {
                     name="email"
                     type="email"
                     placeholder="E-mail"
-                    required
                     maxLength={255}
                     className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent/30"
                   />
@@ -151,7 +172,6 @@ const QuoteSection = () => {
                     name="celular"
                     type="tel"
                     placeholder="WhatsApp"
-                    required
                     maxLength={20}
                     className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent/30"
                   />
@@ -159,13 +179,11 @@ const QuoteSection = () => {
                     name="cidade"
                     type="text"
                     placeholder="Cidade"
-                    required
                     maxLength={100}
                     className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent/30"
                   />
                 </div>
 
-                {/* Multi-select tipo de projeto */}
                 <div>
                   <p className="text-sm text-muted-foreground mb-3">
                     Tipo de projeto <span className="text-accent">*</span>
@@ -202,7 +220,6 @@ const QuoteSection = () => {
                   />
                   <select
                     name="fase"
-                    required
                     className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-accent/30"
                   >
                     <option value="">Fase atual do projeto</option>
@@ -212,7 +229,6 @@ const QuoteSection = () => {
                   </select>
                 </div>
 
-                {/* Textarea com botão IA */}
                 <div className="relative">
                   <textarea
                     name="mensagem"
@@ -223,7 +239,7 @@ const QuoteSection = () => {
                     onChange={(e) => setMensagem(e.target.value)}
                     className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent/30 resize-none pb-10"
                   />
-                  {mensagem.trim().length > 0 && (
+                  {mensagem.trim() && (
                     <button
                       type="button"
                       onClick={handleImprove}

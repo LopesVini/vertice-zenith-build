@@ -4,7 +4,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from tools.utils import log_error, send_gmail, GMAIL_USER
 
-EMAIL_DESTINATARIO = os.getenv("EMAIL_DESTINATARIO")
+EMAIL_DESTINATARIO = os.getenv("EMAIL_DESTINATARIO", "").strip()
 
 
 def notify_team_email(record: dict):
