@@ -1,17 +1,14 @@
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
-from tools.utils import log_error, send_gmail, GMAIL_USER
+from tools.utils import log_error, send_email_api
 
 
 def send_client_email(record: dict, body: str):
     nome = record.get("nome", "")
     email_destino = record.get("email", "")
+    if not email_destino:
+        return
+        
     primeiro_nome = nome.split()[0] if nome else "cliente"
-
-    msg = MIMEMultipart("alternative")
-    msg["Subject"] = f"Recebemos seu pedido de orçamento, {primeiro_nome}!"
-    msg["From"] = f"Verticie Projetos <{GMAIL_USER}>"
-    msg["To"] = email_destino
+    subject = f"Recebemos seu pedido de orçamento, {primeiro_nome}!"
 
     body_html = body.replace("\n", "<br>")
     html = f"""<!DOCTYPE html>
@@ -44,10 +41,9 @@ def send_client_email(record: dict, body: str):
 </body>
 </html>"""
 
-    msg.attach(MIMEText(body, "plain", "utf-8"))
-    msg.attach(MIMEText(html, "html", "utf-8"))
-
     try:
-        send_gmail(email_destino, msg)
+        send_email_api(email_destino, subject, html, body)
     except Exception as e:
         log_error(f"send_client_email falhou para {email_destino}: {e}")
+        if hasattr(e, "response") and e.response is not None:
+            log_error(f"Detalhes: {e.response.text}")
