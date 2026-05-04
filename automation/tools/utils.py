@@ -24,7 +24,7 @@ def send_email_api(to_addr: str, subject: str, html_body: str, text_body: str):
         return
 
     payload = {
-        "from": f"Verticie Projetos <{RESEND_FROM_EMAIL}>",
+        "from": f"Vertice Projetos <{RESEND_FROM_EMAIL}>",
         "to": [to_addr],
         "subject": subject,
         "html": html_body,

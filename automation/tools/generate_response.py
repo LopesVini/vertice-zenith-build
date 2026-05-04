@@ -6,12 +6,12 @@ GROQ_API_KEY = os.getenv("GROQ_API_KEY", "").strip()
 
 FALLBACK = """Olá,
 
-Recebemos sua solicitação de orçamento e agradecemos o interesse na Verticie.
+Recebemos sua solicitação de orçamento e agradecemos o interesse na Vertice.
 
 Em breve nossa equipe entrará em contato para dar continuidade ao seu atendimento.
 
 Atenciosamente,
-Equipe Verticie"""
+Equipe Vertice"""
 
 
 def generate_response(record: dict) -> str:
@@ -29,7 +29,7 @@ def generate_response(record: dict) -> str:
         extras.append(f"- Observação do cliente: {mensagem}")
     extras_str = "\n".join(extras)
 
-    prompt = f"""Você é o assistente da Verticie, empresa de engenharia civil especializada em projetos residenciais em Belo Horizonte, Nova Lima e Contagem.
+    prompt = f"""Você é o assistente da Vertice, empresa de engenharia civil especializada em projetos residenciais em Belo Horizonte, Nova Lima e Contagem.
 
 Um cliente enviou uma solicitação de orçamento com os seguintes dados:
 - Nome: {nome}
@@ -44,7 +44,7 @@ Regras:
 - Confirme que recebemos o pedido
 - Mencione brevemente o tipo de projeto solicitado
 - Informe que entraremos em contato em até 24 horas úteis
-- Assine como "Equipe Verticie"
+- Assine como "Equipe Vertice"
 - Escreva apenas o corpo do e-mail, sem linha de assunto
 - Use português formal, sem exageros"""
 

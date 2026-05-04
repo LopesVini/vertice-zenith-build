@@ -19,7 +19,7 @@ def send_client_email(record: dict, body: str):
       <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;background:#ffffff;border-radius:8px;overflow:hidden;">
         <tr>
           <td style="background:#1a1a2e;padding:32px;text-align:center;">
-            <h1 style="color:#ffffff;margin:0;font-size:22px;letter-spacing:2px;">VERTICIE</h1>
+            <h1 style="color:#ffffff;margin:0;font-size:22px;letter-spacing:2px;">VERTICE</h1>
             <p style="color:rgba(255,255,255,0.5);margin:8px 0 0;font-size:13px;">Engenharia Civil · Projetos Residenciais</p>
           </td>
         </tr>

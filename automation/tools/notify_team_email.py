@@ -29,7 +29,7 @@ Fase:     {fase}
 Mensagem: {mensagem}
 
 ---
-Verticie Automação · {datetime.datetime.now().strftime("%d/%m/%Y %H:%M")}
+Vertice Automação · {datetime.datetime.now().strftime("%d/%m/%Y %H:%M")}
 """
 
     html = body.replace("\n", "<br>")
