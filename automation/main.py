@@ -78,7 +78,17 @@ def health():
     return {"status": "ok", "timestamp": datetime.datetime.now().isoformat()}
 
 
+@app.get("/logs")
+def get_logs():
+    try:
+        with open(".tmp/errors.log", "r", encoding="utf-8") as f:
+            return {"logs": f.read().splitlines()}
+    except FileNotFoundError:
+        return {"logs": ["Nenhum log encontrado."]}
+
+
 def _log(msg: str):
+    print(f"[INFO] {msg}", flush=True)
     os.makedirs(".tmp", exist_ok=True)
     with open(".tmp/errors.log", "a", encoding="utf-8") as f:
         f.write(f"[{datetime.datetime.now()}] {msg}\n")

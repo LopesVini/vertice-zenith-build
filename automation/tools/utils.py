@@ -12,6 +12,7 @@ SHEETS_SCOPES = [
 
 
 def log_error(msg: str):
+    print(f"[ERROR] {msg}", flush=True)
     os.makedirs(".tmp", exist_ok=True)
     with open(".tmp/errors.log", "a", encoding="utf-8") as f:
         f.write(f"[{datetime.datetime.now()}] {msg}\n")
