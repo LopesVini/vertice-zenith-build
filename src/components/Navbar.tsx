@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -7,6 +7,14 @@ const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+
+  const handleHomeClick = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    if (location.pathname !== "/") {
+      navigate("/");
+    }
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -31,10 +39,10 @@ const Navbar = () => {
             : "bg-transparent text-primary-foreground"
         )}
       >
-        <Link to="/" className="font-sans font-bold text-xl tracking-tight relative group text-foreground md:text-inherit">
+        <button onClick={handleHomeClick} className="font-sans font-bold text-xl tracking-tight relative group text-foreground md:text-inherit bg-none border-none cursor-pointer">
           VERTICE
           <span className="absolute -bottom-1 left-0 w-0 h-[2px] bg-accent transition-all duration-300 group-hover:w-full"></span>
-        </Link>
+        </button>
 
         {/* Desktop Links */}
         <div className={cn(
