@@ -19,6 +19,8 @@ def log_error(msg: str):
 
 
 def send_gmail(to_addr: str, message):
-    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+    with smtplib.SMTP("smtp.gmail.com", 587, timeout=15) as server:
+        server.ehlo()
+        server.starttls()
         server.login(GMAIL_USER, GMAIL_APP_PASSWORD)
         server.sendmail(GMAIL_USER, to_addr, message.as_string())
