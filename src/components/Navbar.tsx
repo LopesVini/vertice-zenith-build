@@ -56,14 +56,26 @@ const Navbar = () => {
 
         {/* CTA & Mobile Toggle */}
         <div className="flex items-center gap-4">
-          <Link
-            to="/orcamento"
-            className="hidden md:flex relative overflow-hidden bg-accent text-accent-foreground px-6 py-2 rounded-full text-sm font-bold shadow-md shadow-accent/20 hover:scale-[1.03] transition-transform duration-300 ease-[cubic-bezier(0.25,0.46,0.45,0.94)] group"
-          >
-            <span className="relative z-10">Iniciar Projeto</span>
-            <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-[cubic-bezier(0.25,0.46,0.45,0.94)] rounded-full"></div>
-          </Link>
-          
+          <div className="hidden md:flex items-center gap-3">
+            <Link
+              to="/login"
+              className={cn(
+                "relative overflow-hidden border px-5 py-2 rounded-full text-sm font-bold shadow-md hover:scale-[1.03] transition-all duration-300 ease-[cubic-bezier(0.25,0.46,0.45,0.94)]",
+                scrolled || location.pathname !== "/"
+                  ? "border-foreground/20 text-foreground hover:bg-foreground/5"
+                  : "border-white/20 bg-white/5 text-white hover:bg-white/10 hover:border-white/30"
+              )}
+            >
+              Área do Cliente
+            </Link>
+            <Link
+              to="/orcamento"
+              className="relative overflow-hidden bg-accent text-accent-foreground px-6 py-2 rounded-full text-sm font-bold shadow-md shadow-accent/20 hover:scale-[1.03] transition-transform duration-300 ease-[cubic-bezier(0.25,0.46,0.45,0.94)] group"
+            >
+              <span className="relative z-10">Iniciar Projeto</span>
+              <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-[cubic-bezier(0.25,0.46,0.45,0.94)] rounded-full"></div>
+            </Link>
+          </div>
           <button 
             className={cn("md:hidden", scrolled || location.pathname !== "/" ? "text-foreground" : "text-primary-foreground")}
             onClick={() => setMobileOpen(!mobileOpen)}
@@ -79,9 +91,17 @@ const Navbar = () => {
           <Link to="/servicos" className="p-2 font-bold border-b border-border/50">Serviços</Link>
           <Link to="/projetos" className="p-2 font-bold border-b border-border/50">Projetos</Link>
           <Link to="/processo" className="p-2 font-bold border-b border-border/50">Processo</Link>
-          <Link to="/orcamento" className="p-3 mt-2 text-center bg-accent text-accent-foreground rounded-full font-bold">
-            Iniciar Projeto
-          </Link>
+          <div className="flex flex-col gap-2 mt-2">
+            <Link 
+              to="/login" 
+              className="p-3 text-center border border-foreground/20 text-foreground hover:bg-foreground/5 rounded-full font-bold transition-colors"
+            >
+              Área do Cliente
+            </Link>
+            <Link to="/orcamento" className="p-3 text-center bg-accent text-accent-foreground rounded-full font-bold">
+              Iniciar Projeto
+            </Link>
+          </div>
         </div>
       )}
     </div>
