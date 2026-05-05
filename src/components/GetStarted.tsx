@@ -78,16 +78,20 @@ const GetStarted = () => {
     const tipo = selectedTypes.join(", ");
 
     // 1. Fire and forget no Supabase (não trava a tela esperando)
-    supabase.from("Orçamentos").insert({
-      nome,
-      email,
-      celular,
-      cidade,
-      tipo,
-      mensagem: message,
-    }).then(({ error: dbError }) => {
-      if (dbError) console.error("Aviso: Falha ao salvar no banco (Supabase):", dbError);
-    }).catch(err => console.error("Erro Supabase:", err));
+    Promise.resolve(
+      supabase.from("Orçamentos").insert({
+        nome,
+        email,
+        celular,
+        cidade,
+        tipo,
+        mensagem: message,
+      })
+    )
+      .then(({ error: dbError }) => {
+        if (dbError) console.error("Aviso: Falha ao salvar no banco (Supabase):", dbError);
+      })
+      .catch((err) => console.error("Erro Supabase:", err));
 
     // 2. Fire and forget no Render (se estiver dormindo, vai demorar 50s no background, mas não trava a tela)
     const automationUrl = import.meta.env.VITE_AUTOMATION_URL;
