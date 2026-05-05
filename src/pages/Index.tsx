@@ -6,8 +6,10 @@ import GetStarted from "@/components/GetStarted";
 import Footer from "@/components/Footer";
 import { ArrowRight, Layers, Ruler, Blocks } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useScrollToTop } from "@/hooks/useScrollToTop";
 
 const Index = () => {
+  useScrollToTop();
   useEffect(() => {
   }, []);
 

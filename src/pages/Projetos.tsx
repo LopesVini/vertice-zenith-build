@@ -3,6 +3,7 @@ import gsap from "gsap";
 import { ArrowUpRight } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { useScrollToTop } from "@/hooks/useScrollToTop";
 
 // Imagens de exemplo do Unsplash conforme solicitado
 const projects = [
@@ -37,6 +38,7 @@ const projects = [
 ];
 
 const Projetos = () => {
+  useScrollToTop();
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

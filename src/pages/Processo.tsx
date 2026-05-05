@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import { ArrowRight, MessageSquare, Compass, Ruler, Blocks, CheckSquare, Home } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { useScrollToTop } from "@/hooks/useScrollToTop";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -43,6 +44,7 @@ const timelineSteps = [
 ];
 
 const Processo = () => {
+  useScrollToTop();
   const lineRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 

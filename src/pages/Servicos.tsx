@@ -4,6 +4,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { Layers, Zap, Droplets, HardHat } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { useScrollToTop } from "@/hooks/useScrollToTop";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -152,6 +153,7 @@ const HidroCard = () => {
 
 
 const Servicos = () => {
+  useScrollToTop();
   const sectionRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useLayoutEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -35,16 +35,32 @@ const queryClient = new QueryClient();
 const RouteChangeHandler = () => {
   const { pathname } = useLocation();
 
-  useEffect(() => {
-    // Apenas forçar a rolagem pro topo
-    window.scrollTo(0, 0);
+  useLayoutEffect(() => {
+    const prevHtml = document.documentElement.style.scrollBehavior;
+    const prevBody = document.body.style.scrollBehavior;
+    document.documentElement.style.scrollBehavior = "auto";
+    document.body.style.scrollBehavior = "auto";
 
-    // Atualizar o ScrollTrigger para garantir posições corretas
+    window.scrollTo(0, 0);
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+
+    const raf = requestAnimationFrame(() => {
+      window.scrollTo(0, 0);
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+      document.documentElement.style.scrollBehavior = prevHtml;
+      document.body.style.scrollBehavior = prevBody;
+    });
+
     const timer = setTimeout(() => {
       ScrollTrigger.refresh();
     }, 100);
 
-    return () => clearTimeout(timer);
+    return () => {
+      cancelAnimationFrame(raf);
+      clearTimeout(timer);
+    };
   }, [pathname]);
 
   return null;

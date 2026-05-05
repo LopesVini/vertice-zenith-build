@@ -26,7 +26,7 @@ export default function BimPlaceholder() {
       {/* Header */}
       <div className="flex justify-between items-end border-b border-zinc-200 dark:border-white/5 pb-4 mb-2">
         <div className="flex items-center gap-4">
-          <div className="bg-primary/20 text-primary px-3 py-1 rounded-[0.25rem] font-bold text-sm">
+          <div className="bg-accent/20 text-accent px-3 py-1 rounded-[0.25rem] font-bold text-sm">
             [ IFC ]
           </div>
           <h1 className="text-3xl font-black tracking-tighter text-navy dark:text-white uppercase font-sans">

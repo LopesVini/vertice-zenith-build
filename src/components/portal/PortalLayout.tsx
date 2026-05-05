@@ -51,9 +51,9 @@ export default function PortalLayout() {
           <NavItem icon={<History />} label="Atualizações" to="/portal/updates" />
         </nav>
 
-        <div className="mt-auto border-t border-zinc-200 dark:border-white/5 flex flex-col">
+        <div className="mt-auto flex flex-col">
           {/* Theme Toggle Widget */}
-          <div className="p-4 flex items-center justify-center lg:justify-start border-b border-zinc-200 dark:border-white/5">
+          <div className="p-4 flex items-center justify-center lg:justify-start">
             <button 
               onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
               className="relative w-14 h-8 rounded-full bg-zinc-200 dark:bg-black/40 border border-zinc-300 dark:border-white/10 transition-colors duration-300 focus:outline-none flex items-center"

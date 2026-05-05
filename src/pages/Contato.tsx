@@ -2,8 +2,10 @@ import { useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import GetStarted from "@/components/GetStarted";
 import Footer from "@/components/Footer";
+import { useScrollToTop } from "@/hooks/useScrollToTop";
 
 const Contato = () => {
+  useScrollToTop();
   useEffect(() => {
   }, []);
 
