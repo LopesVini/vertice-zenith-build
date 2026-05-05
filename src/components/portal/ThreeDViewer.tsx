@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import * as OBC from "@thatopen/components";
+import * as THREE from "three";
 import { Loader2, Cuboid } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -42,20 +43,20 @@ export default function ThreeDViewer() {
 
         // Adicionando uma caixa de exemplo para provar que o motor 3D está vivo no MVP
         // Num cenário real, aqui usaríamos o OBC.IfcLoader para baixar o arquivo do Supabase
-        const material = new OBC.THREE.MeshStandardMaterial({ 
+        const material = new THREE.MeshStandardMaterial({ 
           color: 0x2E4036, // Cor Primária do Preset
           roughness: 0.2,
           metalness: 0.8
         });
-        const geometry = new OBC.THREE.BoxGeometry(3, 3, 3);
-        const cube = new OBC.THREE.Mesh(geometry, material);
+        const geometry = new THREE.BoxGeometry(3, 3, 3);
+        const cube = new THREE.Mesh(geometry, material);
         cube.position.set(0, 1.5, 0);
         world.scene.three.add(cube);
 
         // Luzes
-        const ambientLight = new OBC.THREE.AmbientLight(0xffffff, 0.5);
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
         world.scene.three.add(ambientLight);
-        const directionalLight = new OBC.THREE.DirectionalLight(0xffffff, 1);
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
         directionalLight.position.set(10, 20, 10);
         world.scene.three.add(directionalLight);
 
