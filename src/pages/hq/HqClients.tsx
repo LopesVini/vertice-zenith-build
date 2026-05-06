@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Search, Plus, Mail, Phone, MapPin, Briefcase, ChevronRight, Star, MoreHorizontal, X, UserPlus, Loader2, Inbox } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
+import { SEED_CLIENTS } from "@/data/seedData";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -72,7 +73,7 @@ function useClients() {
       countMap[p.client_id] = (countMap[p.client_id] ?? 0) + 1;
     }
 
-    setClients(profiles.map(p => ({
+    const real: Client[] = profiles.map(p => ({
       id:       p.id,
       name:     p.display_name || p.email?.split("@")[0] || "Cliente",
       company:  p.metadata?.company || "Particular",
@@ -85,7 +86,12 @@ function useClients() {
       since:    fmtSince(p.created_at),
       initials: makeInitials(p.display_name || p.email || "?"),
       color:    colorFromId(p.id),
-    })));
+    }));
+
+    // Seed clients appear after real ones; hidden if email already exists
+    const realEmails = new Set(real.map(c => c.email.toLowerCase()));
+    const seeds = SEED_CLIENTS.filter(s => !realEmails.has(s.email.toLowerCase()));
+    setClients([...real, ...seeds]);
     setLoading(false);
   }
 

@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
+import { SEED_PROJECTS } from "@/data/seedData";
 
 export interface Project {
   id: string;
@@ -29,7 +30,11 @@ export function useProjects() {
       .from("projects")
       .select("*, client:profiles!projects_client_id_fkey(display_name,email)")
       .order("created_at", { ascending: false });
-    setProjects((data as Project[]) || []);
+    const real = (data as Project[]) || [];
+    // Seed projects appear after real ones; hidden if a real project has same name
+    const realNames = new Set(real.map(p => p.name.toLowerCase()));
+    const seeds = SEED_PROJECTS.filter(s => !realNames.has(s.name.toLowerCase()));
+    setProjects([...real, ...seeds]);
     setLoading(false);
   }, []);
 
