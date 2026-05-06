@@ -9,7 +9,7 @@ import { IfcAPI } from "web-ifc";
 // ─────────────────────────────────────────────────────────────────────────────
 // Demo IFC URL (público — fornecido pela That Open Company)
 // ─────────────────────────────────────────────────────────────────────────────
-const DEMO_IFC_URL = "https://thatopen.github.io/engine_components/resources/small.ifc";
+const DEMO_IFC_URL = "/models/demo.ifc";
 
 interface ModelInfo {
   name: string;
