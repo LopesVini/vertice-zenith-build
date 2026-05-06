@@ -9,6 +9,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { motion } from "framer-motion";
 import { Lock, ArrowRight, Activity, Box } from "lucide-react";
 import { LineChart, Line, ResponsiveContainer } from "recharts";
+import VerticeLogo from "@/components/VerticeLogo";
 
 const mockChartData = [
   { val: 10 }, { val: 25 }, { val: 20 }, { val: 40 }, { val: 35 }, { val: 60 }
@@ -74,11 +75,9 @@ export default function ClientLogin() {
       {/* Lado Esquerdo - Formulário de Login */}
       <div className="w-full lg:w-[45%] flex flex-col p-8 lg:p-16 relative">
         
-        {/* Logo */}
+        {/* Logo — painel esquerdo do login é sempre claro, então fixa em navy */}
         <div className="flex items-center gap-3 mb-16">
-          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center shadow-lg">
-            <div className="w-4 h-4 border-2 border-white rounded-full"></div>
-          </div>
+          <VerticeLogo monoNavy className="w-10 h-10 shrink-0" />
           <span className="font-bold text-xl tracking-widest text-navy uppercase">Vertice</span>
         </div>
 

@@ -28,6 +28,7 @@ import HqLayout from "./components/hq/HqLayout";
 import HqDashboard from "./pages/hq/HqDashboard";
 import HqProjects from "./pages/hq/HqProjects";
 import HqClients from "./pages/hq/HqClients";
+import Profile from "./pages/Profile";
 
 const queryClient = new QueryClient();
 
@@ -92,6 +93,7 @@ const App = () => (
                 <Route index element={<ProjectDashboard />} />
                 <Route path="bim" element={<BimPlaceholder />} />
                 <Route path="updates" element={<ProjectUpdates />} />
+                <Route path="profile" element={<Profile />} />
               </Route>
 
               {/* Área Administrativa (HQ) */}
@@ -99,6 +101,7 @@ const App = () => (
                 <Route index element={<HqDashboard />} />
                 <Route path="projects" element={<HqProjects />} />
                 <Route path="clients" element={<HqClients />} />
+                <Route path="profile" element={<Profile />} />
               </Route>
 
               {/* Catch-all - Erro 404 */}

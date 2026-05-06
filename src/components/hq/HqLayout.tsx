@@ -1,7 +1,9 @@
-import { Navigate, Outlet, NavLink } from "react-router-dom";
+import { Navigate, Outlet, NavLink, Link, useNavigate } from "react-router-dom";
+import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { Loader2, LogOut, LayoutDashboard, Briefcase, Users, Search, Bell, Settings, Sun, Moon } from "lucide-react";
+import { Loader2, LogOut, LayoutDashboard, Briefcase, Users, Search, Bell, Settings, Sun, Moon, UserCircle, CheckCheck } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
+import VerticeLogo from "@/components/VerticeLogo";
 import FloatingChat from "@/components/chat/FloatingChat";
 import {
   DropdownMenu,
@@ -12,9 +14,47 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+const MOCK_NOTIFICATIONS = [
+  { id: 1, title: "Novo orçamento recebido", desc: "Cliente João Silva enviou uma solicitação de orçamento.", time: "5 min", read: false },
+  { id: 2, title: "Projeto atualizado", desc: "Casa Alto da Boa Vista avançou para 78% de conclusão.", time: "1h", read: false },
+  { id: 3, title: "Entrega aprovada", desc: "Prancha EP-14 aprovada pelo cliente Residência Morumbi.", time: "3h", read: true },
+  { id: 4, title: "Marco concluído", desc: "Compatibilização BIM finalizada no Edifício Central Park.", time: "1d", read: true },
+];
+
 export default function HqLayout() {
-  const { session, loading, signOut } = useAuth();
+  const { session, loading, signOut, displayName } = useAuth();
   const { theme, setTheme } = useTheme();
+  const navigate = useNavigate();
+  const [search, setSearch] = useState("");
+  const [showBell, setShowBell] = useState(false);
+  const [notifications, setNotifications] = useState(MOCK_NOTIFICATIONS);
+  const bellRef = useRef<HTMLDivElement>(null);
+
+  const unreadCount = notifications.filter((n) => !n.read).length;
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (bellRef.current && !bellRef.current.contains(e.target as Node)) {
+        setShowBell(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  function handleSearch(e: React.FormEvent) {
+    e.preventDefault();
+    const q = search.trim();
+    if (!q) return;
+    // Navega para projetos ou clientes dependendo do termo
+    const dest = /cliente|contato|empresa/i.test(q) ? "/hq/clients" : "/hq/projects";
+    navigate(dest);
+    setSearch("");
+  }
+
+  function markAllRead() {
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+  }
 
   if (loading) {
     return (
@@ -45,11 +85,9 @@ export default function HqLayout() {
         
         {/* Logo */}
         <div className="h-24 flex items-center justify-center lg:justify-start lg:px-8">
-          <div className="w-8 h-8 bg-navy dark:bg-primary rounded-lg flex items-center justify-center shadow-md">
-            <span className="text-white font-black text-lg">V</span>
-          </div>
+          <VerticeLogo className="w-9 h-9 shrink-0" />
           <span className="hidden lg:block ml-3 font-bold text-xl tracking-tight text-navy dark:text-white">
-            VerticeHQ
+            VérticeQG
           </span>
         </div>
 
@@ -97,26 +135,65 @@ export default function HqLayout() {
                <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${session.user.email}`} alt="Avatar" className="w-full h-full object-cover" />
             </div>
             <div className="hidden sm:block">
-              <h2 className="text-sm font-bold text-navy dark:text-white leading-tight">Olá, {session.user.email?.split("@")[0].toUpperCase() || "ADMIN"}</h2>
+              <h2 className="text-sm font-bold text-navy dark:text-white leading-tight">Olá, {displayName}</h2>
               <p className="text-xs text-zinc-500">{new Date().toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
             </div>
           </div>
 
           <div className="flex items-center gap-4">
             {/* Search Bar */}
-            <div className="hidden md:flex relative">
+            <form onSubmit={handleSearch} className="hidden md:flex relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
-              <input 
-                type="text" 
-                placeholder="Buscar projetos, clientes..." 
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Buscar projetos, clientes..."
                 className="w-64 bg-white dark:bg-navy-light/40 border border-zinc-200 dark:border-white/10 rounded-full pl-10 pr-4 py-2 text-sm text-navy dark:text-white focus:outline-none focus:border-blue-500 transition-colors shadow-sm"
               />
+            </form>
+
+            {/* Bell / Notificações */}
+            <div ref={bellRef} className="relative">
+              <button
+                onClick={() => setShowBell((v) => !v)}
+                className="w-10 h-10 bg-white dark:bg-navy-light/40 border border-zinc-200 dark:border-white/10 rounded-full flex items-center justify-center text-zinc-500 hover:text-navy dark:hover:text-white transition-colors shadow-sm relative"
+              >
+                <Bell size={18} />
+                {unreadCount > 0 && (
+                  <div className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-navy-dark" />
+                )}
+              </button>
+
+              {showBell && (
+                <div className="absolute right-0 top-12 w-80 bg-white dark:bg-navy-light border border-zinc-200 dark:border-white/10 rounded-2xl shadow-2xl z-50 overflow-hidden">
+                  <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-100 dark:border-white/5">
+                    <span className="font-bold text-sm text-navy dark:text-white">Notificações</span>
+                    {unreadCount > 0 && (
+                      <button onClick={markAllRead} className="flex items-center gap-1 text-xs text-blue-500 hover:text-blue-600 font-semibold">
+                        <CheckCheck size={13} /> Marcar todas como lidas
+                      </button>
+                    )}
+                  </div>
+                  <div className="max-h-80 overflow-y-auto divide-y divide-zinc-100 dark:divide-white/5">
+                    {notifications.map((n) => (
+                      <div
+                        key={n.id}
+                        onClick={() => setNotifications((prev) => prev.map((x) => x.id === n.id ? { ...x, read: true } : x))}
+                        className={`flex gap-3 px-4 py-3 cursor-pointer transition-colors hover:bg-zinc-50 dark:hover:bg-white/5 ${!n.read ? "bg-blue-50/50 dark:bg-blue-500/5" : ""}`}
+                      >
+                        <div className={`mt-1 w-2 h-2 rounded-full flex-shrink-0 ${n.read ? "bg-zinc-300 dark:bg-zinc-600" : "bg-blue-500"}`} />
+                        <div className="flex-1 min-w-0">
+                          <p className={`text-xs font-bold truncate ${n.read ? "text-zinc-500 dark:text-zinc-400" : "text-navy dark:text-white"}`}>{n.title}</p>
+                          <p className="text-xs text-zinc-500 dark:text-zinc-500 mt-0.5 line-clamp-2">{n.desc}</p>
+                          <p className="text-[10px] text-zinc-400 mt-1">{n.time} atrás</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
-            
-            <button className="w-10 h-10 bg-white dark:bg-navy-light/40 border border-zinc-200 dark:border-white/10 rounded-full flex items-center justify-center text-zinc-500 hover:text-navy dark:hover:text-white transition-colors shadow-sm relative">
-              <Bell size={18} />
-              <div className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-navy-dark"></div>
-            </button>
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -125,10 +202,13 @@ export default function HqLayout() {
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56 bg-white dark:bg-navy border-zinc-200 dark:border-white/10 text-navy dark:text-white rounded-xl shadow-2xl">
-                <DropdownMenuLabel className="font-mono text-xs text-zinc-500">Configurações</DropdownMenuLabel>
+                <DropdownMenuLabel className="font-mono text-xs text-zinc-500">Minha Conta</DropdownMenuLabel>
                 <DropdownMenuSeparator className="bg-zinc-200 dark:bg-white/10" />
-                <DropdownMenuItem className="cursor-pointer hover:bg-black/5 dark:hover:bg-white/10">
-                  Meu Perfil
+                <DropdownMenuItem asChild className="cursor-pointer hover:bg-black/5 dark:hover:bg-white/10">
+                  <Link to="/hq/profile">
+                    <UserCircle className="mr-2 h-4 w-4" />
+                    <span>Meu Perfil</span>
+                  </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator className="bg-zinc-200 dark:bg-white/10" />
                 <DropdownMenuItem onClick={signOut} className="cursor-pointer text-red-500 dark:text-red-400 hover:bg-red-500/10">
