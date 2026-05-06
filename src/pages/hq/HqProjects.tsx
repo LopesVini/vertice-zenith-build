@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { useProjects } from "@/hooks/useProjects";
 import type { Project } from "@/hooks/useProjects";
 import { supabase } from "@/lib/supabase";
+import HqProjectDrawer from "@/components/hq/HqProjectDrawer";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -34,10 +35,11 @@ function fmtDate(iso: string | null) {
 
 // ── Project Card ──────────────────────────────────────────────────────────────
 
-function ProjectCard({ proj, index, onProgressChange }: {
+function ProjectCard({ proj, index, onProgressChange, onClick }: {
   proj: Project;
   index: number;
   onProgressChange: (id: string, p: number) => void;
+  onClick: () => void;
 }) {
   const clientName = proj.client?.display_name ?? "—";
   return (
@@ -48,6 +50,7 @@ function ProjectCard({ proj, index, onProgressChange }: {
       exit={{ opacity: 0, scale: 0.95 }}
       transition={{ delay: index * 0.05, duration: 0.3 }}
       whileHover={{ y: -2, boxShadow: "0 8px 24px rgba(0,0,0,0.08)" }}
+      onClick={onClick}
       className="bg-white dark:bg-navy-dark border border-zinc-200 dark:border-white/10 rounded-2xl p-4 cursor-pointer group"
     >
       <div className="flex items-start justify-between mb-3">
@@ -281,6 +284,7 @@ export default function HqProjects() {
   const [search,    setSearch]    = useState("");
   const [filter,    setFilter]    = useState<Project["status"] | "Todos">("Todos");
   const [showModal, setShowModal] = useState(false);
+  const [drawerProj, setDrawerProj] = useState<Project | null>(null);
 
   const filtered = projects.filter(p => {
     const clientName = p.client?.display_name ?? "";
@@ -354,7 +358,7 @@ export default function HqProjects() {
                 <div className="space-y-3">
                   <AnimatePresence>
                     {colProjects.map((proj, i) => (
-                      <ProjectCard key={proj.id} proj={proj} index={i} onProgressChange={handleProgressChange} />
+                      <ProjectCard key={proj.id} proj={proj} index={i} onProgressChange={handleProgressChange} onClick={() => setDrawerProj(proj)} />
                     ))}
                   </AnimatePresence>
                   {colProjects.length === 0 && (
@@ -371,7 +375,7 @@ export default function HqProjects() {
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           <AnimatePresence>
             {filtered.map((proj, i) => (
-              <ProjectCard key={proj.id} proj={proj} index={i} onProgressChange={handleProgressChange} />
+              <ProjectCard key={proj.id} proj={proj} index={i} onProgressChange={handleProgressChange} onClick={() => setDrawerProj(proj)} />
             ))}
           </AnimatePresence>
           {filtered.length === 0 && (
@@ -390,6 +394,8 @@ export default function HqProjects() {
           />
         )}
       </AnimatePresence>
+
+      <HqProjectDrawer project={drawerProj} onClose={() => setDrawerProj(null)} />
 
       <style>{`
         :where(.modal-input) { width:100%;background:rgb(249 250 251);border:1px solid rgb(228 228 231);border-radius:.625rem;padding:.5rem .75rem;font-size:.813rem;color:rgb(15 23 42);outline:none;transition:border-color 150ms; }
