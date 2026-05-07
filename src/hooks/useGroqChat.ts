@@ -67,5 +67,9 @@ export function useGroqChat(systemPrompt: string, initialMessage?: string) {
     }
   }
 
-  return { messages, isLoading, sendMessage };
+  function clearMessages() {
+    setMessages(initialMessage ? [{ id: 0, role: "assistant", content: initialMessage }] : []);
+  }
+
+  return { messages, isLoading, sendMessage, clearMessages };
 }

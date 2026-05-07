@@ -1,14 +1,12 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import {
-  Box, Layers, Upload, Loader2, RotateCw, Maximize2, Search, ChevronRight, Eye, AlertCircle,
+  Box, Layers, Loader2, Maximize2, Search, ChevronRight, Eye, AlertCircle,
 } from "lucide-react";
 import * as THREE from "three";
 import { OrbitControls } from "three-stdlib";
 import { IfcAPI } from "web-ifc";
+import { useClientProject } from "@/hooks/useClientProject";
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Demo IFC URL (público — fornecido pela That Open Company)
-// ─────────────────────────────────────────────────────────────────────────────
 const DEMO_IFC_URL = "/models/demo.ifc";
 
 interface ModelInfo {
@@ -300,8 +298,8 @@ function TreeNodeView({ node, depth = 0 }: { node: SpatialNode; depth?: number }
 // ─────────────────────────────────────────────────────────────────────────────
 export default function BimViewer() {
   const containerRef = useRef<HTMLDivElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const { modelGroup, fitToModel, clearModel } = useThreeScene(containerRef);
+  const { project, loading: projectLoading } = useClientProject();
 
   const [loading, setLoading]   = useState(false);
   const [progress, setProgress] = useState("");
@@ -309,8 +307,9 @@ export default function BimViewer() {
   const [info, setInfo]         = useState<ModelInfo | null>(null);
   const [tree, setTree]         = useState<SpatialNode | null>(null);
   const [search, setSearch]     = useState("");
+  const [isProjectModel, setIsProjectModel] = useState(false);
 
-  const loadFromBuffer = useCallback(async (buffer: ArrayBuffer, sourceName: string) => {
+  const loadFromBuffer = useCallback(async (buffer: ArrayBuffer, sourceName: string, fromProject = false) => {
     setLoading(true);
     setError(null);
     clearModel();
@@ -319,6 +318,7 @@ export default function BimViewer() {
       const result = await loadIfcIntoGroup(data, modelGroup, setProgress);
       setInfo({ ...result.info, name: sourceName });
       setTree(result.tree);
+      setIsProjectModel(fromProject);
       setTimeout(fitToModel, 50);
     } catch (e: any) {
       setError(e?.message || "Falha ao carregar modelo IFC.");
@@ -336,7 +336,7 @@ export default function BimViewer() {
       const res = await fetch(DEMO_IFC_URL);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const buf = await res.arrayBuffer();
-      await loadFromBuffer(buf, "Modelo Demo (small.ifc)");
+      await loadFromBuffer(buf, "Modelo Demo (small.ifc)", false);
     } catch (e: any) {
       setError("Não foi possível baixar o modelo demo. " + (e?.message ?? ""));
       setLoading(false);
@@ -344,15 +344,29 @@ export default function BimViewer() {
     }
   }, [loadFromBuffer]);
 
-  useEffect(() => { loadDemo(); /* auto-load demo on mount */ }, [loadDemo]);
-
-  function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = ev => loadFromBuffer(ev.target!.result as ArrayBuffer, file.name);
-    reader.readAsArrayBuffer(file);
-  }
+  // Carrega IFC do projeto assim que o projeto for resolvido
+  useEffect(() => {
+    if (projectLoading) return;
+    if (project?.ifc_url) {
+      (async () => {
+        setLoading(true);
+        setProgress("Baixando modelo do projeto...");
+        setError(null);
+        try {
+          const res = await fetch(project.ifc_url!);
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const buf = await res.arrayBuffer();
+          await loadFromBuffer(buf, project.name, true);
+        } catch (e: any) {
+          setError("Não foi possível carregar o modelo do projeto. " + (e?.message ?? ""));
+          setLoading(false);
+          setProgress("");
+        }
+      })();
+    } else {
+      loadDemo();
+    }
+  }, [projectLoading, project?.ifc_url, project?.name, loadFromBuffer, loadDemo]);
 
   return (
     <div className="flex flex-col h-[calc(100vh-6rem)] w-full font-mono text-zinc-300 relative gap-6">
@@ -366,13 +380,6 @@ export default function BimViewer() {
           </h1>
         </div>
         <div className="flex gap-2">
-          <input ref={fileInputRef} type="file" accept=".ifc" onChange={handleFile} className="hidden" />
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            className="px-4 py-2 bg-zinc-200 dark:bg-white/10 text-navy dark:text-white text-xs font-bold rounded hover:bg-zinc-300 dark:hover:bg-white/20 transition-colors flex items-center gap-2"
-          >
-            <Upload size={14} /> CARREGAR IFC
-          </button>
           <button
             onClick={fitToModel}
             className="px-4 py-2 bg-primary text-white text-xs font-bold rounded hover:bg-primary/90 transition-colors flex items-center gap-2"
@@ -422,7 +429,9 @@ export default function BimViewer() {
             <div className="bg-white/80 dark:bg-black/60 backdrop-blur-md border border-zinc-200 dark:border-white/10 p-3 rounded-lg flex items-center gap-4 pointer-events-auto shadow-lg">
               <div>
                 <p className="text-[10px] text-zinc-500">VIEWER</p>
-                <p className="text-xs font-bold text-navy dark:text-white">three.js + web-ifc</p>
+                <p className="text-xs font-bold text-navy dark:text-white">
+                  {isProjectModel ? "Modelo do Projeto" : "three.js + web-ifc"}
+                </p>
               </div>
               {info && (
                 <>
@@ -438,9 +447,6 @@ export default function BimViewer() {
             <div className="flex flex-col gap-2 pointer-events-auto">
               <button onClick={fitToModel} className="w-10 h-10 bg-white dark:bg-navy-light/80 border border-zinc-200 dark:border-white/10 rounded-lg flex items-center justify-center text-zinc-500 hover:text-navy dark:hover:text-white hover:border-primary transition-colors shadow-lg" title="Enquadrar">
                 <Maximize2 size={16} />
-              </button>
-              <button onClick={loadDemo} className="w-10 h-10 bg-white dark:bg-navy-light/80 border border-zinc-200 dark:border-white/10 rounded-lg flex items-center justify-center text-zinc-500 hover:text-navy dark:hover:text-white hover:border-primary transition-colors shadow-lg" title="Recarregar demo">
-                <RotateCw size={16} />
               </button>
             </div>
           </div>
@@ -462,9 +468,6 @@ export default function BimViewer() {
                 <button onClick={loadDemo} className="px-4 py-2 bg-primary text-white text-xs font-bold rounded hover:bg-primary/90 transition-colors">
                   TENTAR DEMO NOVAMENTE
                 </button>
-                <button onClick={() => fileInputRef.current?.click()} className="px-4 py-2 bg-white/10 text-white text-xs font-bold rounded hover:bg-white/20 transition-colors">
-                  CARREGAR ARQUIVO LOCAL
-                </button>
               </div>
             </div>
           )}
@@ -474,7 +477,7 @@ export default function BimViewer() {
             <div className="absolute bottom-10 left-0 right-0 flex flex-col items-center pointer-events-none">
               <Eye size={20} className="text-zinc-500 mb-2" />
               <p className="text-sm font-bold text-zinc-400 dark:text-zinc-500 tracking-widest font-sans uppercase">
-                Carregue um arquivo IFC para visualizar
+                Modelo BIM não disponível ainda
               </p>
             </div>
           )}

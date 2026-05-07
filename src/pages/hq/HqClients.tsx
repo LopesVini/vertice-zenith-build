@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Plus, Mail, Phone, MapPin, Briefcase, ChevronRight, Star, MoreHorizontal, X, UserPlus, Loader2, Inbox } from "lucide-react";
+import { Search, Plus, Mail, Phone, MapPin, Briefcase, ChevronRight, Star, MoreHorizontal, X, UserPlus, Loader2, Inbox, Trash2, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { SEED_CLIENTS } from "@/data/seedData";
@@ -127,12 +128,18 @@ function useClients() {
     return { error };
   }
 
-  return { clients, loading, addClient };
+  async function deleteClient(id: string) {
+    const { error } = await supabase.from("profiles").delete().eq("id", id);
+    if (!error) setClients(prev => prev.filter(c => c.id !== id));
+    return { error };
+  }
+
+  return { clients, loading, addClient, deleteClient };
 }
 
 // ── Client Card ───────────────────────────────────────────────────────────────
 
-function ClientCard({ client, index }: { client: Client; index: number }) {
+function ClientCard({ client, index, onDelete }: { client: Client; index: number; onDelete: (c: Client) => void }) {
   return (
     <motion.div
       layout
@@ -160,6 +167,12 @@ function ClientCard({ client, index }: { client: Client; index: number }) {
           <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${statusStyles[client.status]}`}>
             {client.status}
           </span>
+          <button
+            onClick={e => { e.stopPropagation(); onDelete(client); }}
+            className="text-zinc-400 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100 p-0.5 rounded"
+          >
+            <Trash2 size={14} />
+          </button>
           <button className="text-zinc-400 hover:text-navy dark:hover:text-white transition-colors opacity-0 group-hover:opacity-100">
             <MoreHorizontal size={15} />
           </button>
@@ -344,11 +357,67 @@ function NewClientModal({ onClose, onSave }: { onClose: () => void; onSave: () =
 
 // ── Main Component ────────────────────────────────────────────────────────────
 
+function ConfirmDeleteModal({ name, onConfirm, onCancel }: { name: string; onConfirm: () => void; onCancel: () => void }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+      onClick={e => e.target === e.currentTarget && onCancel()}
+    >
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: 12 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 8 }}
+        transition={{ type: "spring", stiffness: 320, damping: 28 }}
+        className="w-full max-w-sm bg-white dark:bg-[#111827] border border-zinc-200 dark:border-white/10 rounded-2xl shadow-2xl p-6"
+      >
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-10 h-10 rounded-xl bg-red-100 dark:bg-red-500/10 flex items-center justify-center">
+            <AlertTriangle size={20} className="text-red-500" />
+          </div>
+          <div>
+            <h3 className="font-bold text-sm text-navy dark:text-white">Confirmar exclusão</h3>
+            <p className="text-[11px] text-zinc-500">Esta ação não pode ser desfeita</p>
+          </div>
+        </div>
+        <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-5">
+          Tem certeza que deseja excluir o cliente <span className="font-bold text-navy dark:text-white">"{name}"</span>?
+        </p>
+        <div className="flex gap-3 justify-end">
+          <button onClick={onCancel} className="px-4 py-2 text-sm font-bold text-zinc-500 hover:text-navy dark:hover:text-white bg-zinc-100 dark:bg-white/5 rounded-xl transition-colors">
+            Cancelar
+          </button>
+          <button onClick={onConfirm} className="px-4 py-2 text-sm font-bold text-white bg-red-500 hover:bg-red-600 rounded-xl transition-colors shadow-md shadow-red-500/20">
+            Excluir
+          </button>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
 export default function HqClients() {
-  const { clients, loading, addClient } = useClients();
+  const { clients, loading, addClient, deleteClient } = useClients();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [search,    setSearch]   = useState("");
   const [filter,    setFilter]   = useState<ClientStatus | "Todos">("Todos");
   const [showModal, setShowModal] = useState(false);
+
+  useEffect(() => {
+    if (searchParams.get("new") === "1") {
+      setShowModal(true);
+      setSearchParams({}, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
+  const [deleteTarget, setDeleteTarget] = useState<Client | null>(null);
+
+  async function handleDeleteConfirm() {
+    if (!deleteTarget) return;
+    const { error } = await deleteClient(deleteTarget.id);
+    if (error) toast.error("Erro ao excluir cliente.");
+    else toast.success(`Cliente "${deleteTarget.name}" excluído.`);
+    setDeleteTarget(null);
+  }
 
   const summary = useMemo(() => [
     { label: "Total de Clientes", value: clients.length,                                      color: "text-navy dark:text-white"         },
@@ -433,7 +502,7 @@ export default function HqClients() {
       {!loading && (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
           <AnimatePresence>
-            {filtered.map((client, i) => <ClientCard key={client.id} client={client} index={i} />)}
+            {filtered.map((client, i) => <ClientCard key={client.id} client={client} index={i} onDelete={setDeleteTarget} />)}
           </AnimatePresence>
           {filtered.length === 0 && clients.length > 0 && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
@@ -444,12 +513,19 @@ export default function HqClients() {
         </div>
       )}
 
-      {/* Modal */}
+      {/* Modals */}
       <AnimatePresence>
         {showModal && (
           <NewClientModal
             onClose={() => setShowModal(false)}
             onSave={addClient as unknown as () => void}
+          />
+        )}
+        {deleteTarget && (
+          <ConfirmDeleteModal
+            name={deleteTarget.name}
+            onConfirm={handleDeleteConfirm}
+            onCancel={() => setDeleteTarget(null)}
           />
         )}
       </AnimatePresence>

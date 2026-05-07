@@ -1,7 +1,7 @@
 import { Navigate, Outlet, NavLink, Link, useNavigate } from "react-router-dom";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { Loader2, LogOut, LayoutDashboard, Briefcase, Users, Search, Bell, Settings, Sun, Moon, UserCircle, CheckCheck } from "lucide-react";
+import { Loader2, LogOut, LayoutDashboard, Briefcase, Users, Search, Bell, Settings, Sun, Moon, UserCircle, CheckCheck, Plus, UserPlus, ArrowRight, Command } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
 import VerticeLogo from "@/components/VerticeLogo";
 import FloatingChat from "@/components/chat/FloatingChat";
@@ -14,6 +14,133 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+// ── Command palette ───────────────────────────────────────────────────────────
+
+interface Cmd {
+  id: string;
+  label: string;
+  desc: string;
+  icon: React.ElementType;
+  path: string;
+  category: string;
+  keywords: string[];
+}
+
+const COMMANDS: Cmd[] = [
+  { id: "dashboard",   label: "Dashboard",      desc: "Área principal do sistema",       icon: LayoutDashboard, path: "/hq",              category: "Navegar",  keywords: ["home","início","inicio","painel","principal","dashboard"] },
+  { id: "projects",    label: "Ver Projetos",    desc: "Lista de todos os projetos",      icon: Briefcase,       path: "/hq/projects",     category: "Navegar",  keywords: ["projetos","obras","ver projetos","listar"] },
+  { id: "clients",     label: "Ver Clientes",    desc: "Lista de todos os clientes",      icon: Users,           path: "/hq/clients",      category: "Navegar",  keywords: ["clientes","contatos","empresa","ver clientes"] },
+  { id: "profile",     label: "Meu Perfil",      desc: "Configurações da sua conta",      icon: UserCircle,      path: "/hq/profile",      category: "Navegar",  keywords: ["perfil","conta","configurações","settings","profile"] },
+  { id: "new-project", label: "Criar Projeto",   desc: "Abrir formulário de novo projeto",icon: Plus,            path: "/hq/projects?new=1", category: "Ações",  keywords: ["criar projeto","novo projeto","adicionar projeto","new project","add project"] },
+  { id: "new-client",  label: "Criar Cliente",   desc: "Cadastrar um novo cliente",       icon: UserPlus,        path: "/hq/clients?new=1",  category: "Ações",  keywords: ["criar cliente","novo cliente","adicionar cliente","cadastrar cliente","new client"] },
+];
+
+function normalize(s: string) {
+  return s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+}
+
+function filterCommands(q: string): Cmd[] {
+  if (!q.trim()) return COMMANDS;
+  const n = normalize(q);
+  return COMMANDS.filter(c =>
+    normalize(c.label).includes(n) ||
+    normalize(c.desc).includes(n) ||
+    c.keywords.some(k => normalize(k).includes(n))
+  );
+}
+
+function CommandPalette({ onClose }: { onClose: () => void }) {
+  const [query, setQuery] = useState("");
+  const [activeIdx, setActiveIdx] = useState(0);
+  const navigate = useNavigate();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const results = filterCommands(query);
+
+  useEffect(() => { inputRef.current?.focus(); }, []);
+  useEffect(() => { setActiveIdx(0); }, [query]);
+
+  const execute = useCallback((cmd: Cmd) => {
+    navigate(cmd.path);
+    onClose();
+  }, [navigate, onClose]);
+
+  function handleKey(e: React.KeyboardEvent) {
+    if (e.key === "ArrowDown") { e.preventDefault(); setActiveIdx(i => Math.min(i + 1, results.length - 1)); }
+    else if (e.key === "ArrowUp") { e.preventDefault(); setActiveIdx(i => Math.max(i - 1, 0)); }
+    else if (e.key === "Enter" && results[activeIdx]) execute(results[activeIdx]);
+    else if (e.key === "Escape") onClose();
+  }
+
+  const categories = [...new Set(results.map(c => c.category))];
+
+  return (
+    <div className="absolute right-0 top-12 w-96 bg-white dark:bg-navy-light border border-zinc-200 dark:border-white/10 rounded-2xl shadow-2xl z-50 overflow-hidden">
+      <div className="flex items-center gap-3 px-4 py-3 border-b border-zinc-100 dark:border-white/5">
+        <Search className="w-4 h-4 text-zinc-400 shrink-0" />
+        <input
+          ref={inputRef}
+          value={query}
+          onChange={e => setQuery(e.target.value)}
+          onKeyDown={handleKey}
+          placeholder="Buscar ou digitar um comando..."
+          className="flex-1 bg-transparent text-sm text-navy dark:text-white placeholder:text-zinc-400 outline-none"
+        />
+        {query && (
+          <button onClick={() => setQuery("")} className="text-zinc-400 hover:text-zinc-600 dark:hover:text-white">
+            <span className="text-xs">✕</span>
+          </button>
+        )}
+        <kbd className="hidden sm:flex items-center gap-1 text-[10px] text-zinc-400 bg-zinc-100 dark:bg-white/5 px-1.5 py-0.5 rounded font-mono">ESC</kbd>
+      </div>
+
+      <div className="max-h-80 overflow-y-auto py-2">
+        {results.length === 0 && (
+          <p className="text-xs text-zinc-400 text-center py-6">Nenhum resultado para "{query}"</p>
+        )}
+        {categories.map(cat => (
+          <div key={cat}>
+            <p className="px-4 pt-2 pb-1 text-[10px] font-bold tracking-widest text-zinc-400 dark:text-zinc-500">{cat.toUpperCase()}</p>
+            {results.filter(c => c.category === cat).map(cmd => {
+              const idx = results.indexOf(cmd);
+              const Icon = cmd.icon;
+              const isActive = idx === activeIdx;
+              return (
+                <button
+                  key={cmd.id}
+                  onClick={() => execute(cmd)}
+                  onMouseEnter={() => setActiveIdx(idx)}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors text-left ${
+                    isActive ? "bg-blue-50 dark:bg-blue-500/10" : "hover:bg-zinc-50 dark:hover:bg-white/5"
+                  }`}
+                >
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
+                    isActive ? "bg-blue-600 text-white" : "bg-zinc-100 dark:bg-white/5 text-zinc-500 dark:text-zinc-400"
+                  }`}>
+                    <Icon size={15} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-sm font-semibold truncate ${isActive ? "text-blue-600 dark:text-blue-400" : "text-navy dark:text-white"}`}>
+                      {cmd.label}
+                    </p>
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400 truncate">{cmd.desc}</p>
+                  </div>
+                  <ArrowRight size={13} className={`shrink-0 transition-opacity ${isActive ? "opacity-100 text-blue-500" : "opacity-0"}`} />
+                </button>
+              );
+            })}
+          </div>
+        ))}
+      </div>
+
+      <div className="px-4 py-2 border-t border-zinc-100 dark:border-white/5 flex gap-4 text-[10px] text-zinc-400">
+        <span className="flex items-center gap-1"><kbd className="bg-zinc-100 dark:bg-white/5 px-1 rounded font-mono">↑↓</kbd> navegar</span>
+        <span className="flex items-center gap-1"><kbd className="bg-zinc-100 dark:bg-white/5 px-1 rounded font-mono">↵</kbd> executar</span>
+        <span className="flex items-center gap-1"><kbd className="bg-zinc-100 dark:bg-white/5 px-1 rounded font-mono">ESC</kbd> fechar</span>
+      </div>
+    </div>
+  );
+}
+
 const MOCK_NOTIFICATIONS = [
   { id: 1, title: "Novo orçamento recebido", desc: "Cliente João Silva enviou uma solicitação de orçamento.", time: "5 min", read: false },
   { id: 2, title: "Projeto atualizado", desc: "Casa Alto da Boa Vista avançou para 78% de conclusão.", time: "1h", read: false },
@@ -24,9 +151,9 @@ const MOCK_NOTIFICATIONS = [
 export default function HqLayout() {
   const { session, loading, signOut, displayName } = useAuth();
   const { theme, setTheme } = useTheme();
-  const navigate = useNavigate();
-  const [search, setSearch] = useState("");
+  const [showPalette, setShowPalette] = useState(false);
   const [showBell, setShowBell] = useState(false);
+  const paletteRef = useRef<HTMLDivElement>(null);
   const [notifications, setNotifications] = useState(MOCK_NOTIFICATIONS);
   const bellRef = useRef<HTMLDivElement>(null);
 
@@ -34,23 +161,20 @@ export default function HqLayout() {
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
-      if (bellRef.current && !bellRef.current.contains(e.target as Node)) {
-        setShowBell(false);
-      }
+      if (bellRef.current && !bellRef.current.contains(e.target as Node)) setShowBell(false);
+      if (paletteRef.current && !paletteRef.current.contains(e.target as Node)) setShowPalette(false);
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  function handleSearch(e: React.FormEvent) {
-    e.preventDefault();
-    const q = search.trim();
-    if (!q) return;
-    // Navega para projetos ou clientes dependendo do termo
-    const dest = /cliente|contato|empresa/i.test(q) ? "/hq/clients" : "/hq/projects";
-    navigate(dest);
-    setSearch("");
-  }
+  useEffect(() => {
+    function handleGlobalKey(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") { e.preventDefault(); setShowPalette(v => !v); }
+    }
+    document.addEventListener("keydown", handleGlobalKey);
+    return () => document.removeEventListener("keydown", handleGlobalKey);
+  }, []);
 
   function markAllRead() {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
@@ -141,17 +265,20 @@ export default function HqLayout() {
           </div>
 
           <div className="flex items-center gap-4">
-            {/* Search Bar */}
-            <form onSubmit={handleSearch} className="hidden md:flex relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
-              <input
-                type="text"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Buscar projetos, clientes..."
-                className="w-64 bg-white dark:bg-navy-light/40 border border-zinc-200 dark:border-white/10 rounded-full pl-10 pr-4 py-2 text-sm text-navy dark:text-white focus:outline-none focus:border-blue-500 transition-colors shadow-sm"
-              />
-            </form>
+            {/* Command Palette trigger */}
+            <div ref={paletteRef} className="hidden md:block relative">
+              <button
+                onClick={() => setShowPalette(v => !v)}
+                className="flex items-center gap-2.5 w-64 bg-white dark:bg-navy-light/40 border border-zinc-200 dark:border-white/10 rounded-full pl-3.5 pr-3 py-2 text-sm text-zinc-400 hover:border-blue-400 dark:hover:border-blue-500/50 transition-colors shadow-sm group"
+              >
+                <Search className="w-4 h-4 shrink-0" />
+                <span className="flex-1 text-left text-sm">Buscar projetos, clientes...</span>
+                <kbd className="flex items-center gap-0.5 text-[10px] bg-zinc-100 dark:bg-white/5 px-1.5 py-0.5 rounded font-mono text-zinc-400">
+                  <Command size={9} />K
+                </kbd>
+              </button>
+              {showPalette && <CommandPalette onClose={() => setShowPalette(false)} />}
+            </div>
 
             {/* Bell / Notificações */}
             <div ref={bellRef} className="relative">

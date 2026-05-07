@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Send, ChevronLeft, Pin, PinOff, MessageSquare, Loader2 } from "lucide-react";
+import { X, Send, ChevronLeft, Pin, PinOff, MessageSquare, Loader2, Trash2 } from "lucide-react";
 import { useContacts, Contact } from "@/hooks/useContacts";
 import { useChat } from "@/hooks/useChat";
 import { useAuth } from "@/hooks/useAuth";
@@ -74,8 +74,9 @@ function ChatWindow({
   onClose: () => void;
 }) {
   const { user } = useAuth();
-  const { messages, sendMessage, sending, markRead } = useChat(contact.id);
+  const { messages, sendMessage, sending, markRead, clearMessages } = useChat(contact.id);
   const [input, setInput] = useState("");
+  const [confirmClear, setConfirmClear] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   // Marca como lido ao abrir
@@ -118,12 +119,30 @@ function ChatWindow({
             <p className="text-[10px] text-zinc-500 mt-0.5">{contact.email}</p>
           </div>
         </div>
-        <button
-          onClick={onClose}
-          className="text-zinc-500 hover:text-navy dark:hover:text-white transition-colors"
-        >
-          <X size={18} />
-        </button>
+        <div className="flex items-center gap-1">
+          {confirmClear ? (
+            <>
+              <span className="text-[10px] text-zinc-500 mr-1">Apagar histórico?</span>
+              <button onClick={() => { clearMessages(); setConfirmClear(false); }}
+                className="text-[10px] font-bold text-red-500 hover:text-red-600 px-2 py-1 rounded-lg hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors">
+                Sim
+              </button>
+              <button onClick={() => setConfirmClear(false)}
+                className="text-[10px] font-bold text-zinc-500 px-2 py-1 rounded-lg hover:bg-zinc-100 dark:hover:bg-white/5 transition-colors">
+                Não
+              </button>
+            </>
+          ) : (
+            <button onClick={() => setConfirmClear(true)}
+              title="Limpar histórico"
+              className="text-zinc-400 hover:text-red-500 transition-colors p-1 rounded-lg hover:bg-zinc-100 dark:hover:bg-white/5">
+              <Trash2 size={14} />
+            </button>
+          )}
+          <button onClick={onClose} className="text-zinc-500 hover:text-navy dark:hover:text-white transition-colors ml-1">
+            <X size={18} />
+          </button>
+        </div>
       </div>
 
       {/* Mensagens */}

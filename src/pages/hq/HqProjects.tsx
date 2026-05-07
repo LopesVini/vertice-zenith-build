@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Search, MoreHorizontal, Clock, ChevronRight, X, Briefcase, Loader2 } from "lucide-react";
+import { Plus, Search, MoreHorizontal, Clock, ChevronRight, X, Briefcase, Loader2, Trash2, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { useProjects } from "@/hooks/useProjects";
 import type { Project } from "@/hooks/useProjects";
@@ -35,11 +36,12 @@ function fmtDate(iso: string | null) {
 
 // ── Project Card ──────────────────────────────────────────────────────────────
 
-function ProjectCard({ proj, index, onProgressChange, onClick }: {
+function ProjectCard({ proj, index, onProgressChange, onClick, onDelete }: {
   proj: Project;
   index: number;
   onProgressChange: (id: string, p: number) => void;
   onClick: () => void;
+  onDelete: (proj: Project) => void;
 }) {
   const clientName = proj.client?.display_name ?? "—";
   return (
@@ -61,6 +63,12 @@ function ProjectCard({ proj, index, onProgressChange, onClick }: {
           <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${priorityColors[proj.priority] ?? ""}`}>
             {proj.priority}
           </span>
+          <button
+            onClick={e => { e.stopPropagation(); onDelete(proj); }}
+            className="text-zinc-400 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100 p-0.5 rounded"
+          >
+            <Trash2 size={13} />
+          </button>
           <button className="text-zinc-400 hover:text-navy dark:hover:text-white transition-colors opacity-0 group-hover:opacity-100">
             <MoreHorizontal size={14} />
           </button>
@@ -171,6 +179,7 @@ function NewProjectModal({ onClose, onSave }: {
       team:        teamArr.length ? teamArr : [form.name[0]?.toUpperCase() ?? "?"],
       color:       COLORS[Math.floor(Math.random() * COLORS.length)],
       description: form.description.trim() || null,
+      ifc_url: null,
     };
 
     const { error } = await onSave(payload);
@@ -279,12 +288,60 @@ function NewProjectModal({ onClose, onSave }: {
 
 // ── Main Component ────────────────────────────────────────────────────────────
 
+function ConfirmDeleteModal({ name, onConfirm, onCancel }: { name: string; onConfirm: () => void; onCancel: () => void }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+      onClick={e => e.target === e.currentTarget && onCancel()}
+    >
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: 12 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 8 }}
+        transition={{ type: "spring", stiffness: 320, damping: 28 }}
+        className="w-full max-w-sm bg-white dark:bg-[#111827] border border-zinc-200 dark:border-white/10 rounded-2xl shadow-2xl p-6"
+      >
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-10 h-10 rounded-xl bg-red-100 dark:bg-red-500/10 flex items-center justify-center">
+            <AlertTriangle size={20} className="text-red-500" />
+          </div>
+          <div>
+            <h3 className="font-bold text-sm text-navy dark:text-white">Confirmar exclusão</h3>
+            <p className="text-[11px] text-zinc-500">Esta ação não pode ser desfeita</p>
+          </div>
+        </div>
+        <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-5">
+          Tem certeza que deseja excluir <span className="font-bold text-navy dark:text-white">"{name}"</span>?
+        </p>
+        <div className="flex gap-3 justify-end">
+          <button onClick={onCancel} className="px-4 py-2 text-sm font-bold text-zinc-500 hover:text-navy dark:hover:text-white bg-zinc-100 dark:bg-white/5 rounded-xl transition-colors">
+            Cancelar
+          </button>
+          <button onClick={onConfirm} className="px-4 py-2 text-sm font-bold text-white bg-red-500 hover:bg-red-600 rounded-xl transition-colors shadow-md shadow-red-500/20">
+            Excluir
+          </button>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
 export default function HqProjects() {
-  const { projects, loading, saveProject, updateProject } = useProjects();
+  const { projects, loading, saveProject, updateProject, deleteProject } = useProjects();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [search,    setSearch]    = useState("");
   const [filter,    setFilter]    = useState<Project["status"] | "Todos">("Todos");
   const [showModal, setShowModal] = useState(false);
+
+  useEffect(() => {
+    if (searchParams.get("new") === "1") {
+      setShowModal(true);
+      setSearchParams({}, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
   const [drawerProj, setDrawerProj] = useState<Project | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Project | null>(null);
 
   const filtered = projects.filter(p => {
     const clientName = p.client?.display_name ?? "";
@@ -295,6 +352,14 @@ export default function HqProjects() {
 
   async function handleProgressChange(id: string, progress: number) {
     await updateProject(id, { progress });
+  }
+
+  async function handleDeleteConfirm() {
+    if (!deleteTarget) return;
+    const { error } = await deleteProject(deleteTarget.id);
+    if (error) toast.error("Erro ao excluir projeto.");
+    else toast.success(`Projeto "${deleteTarget.name}" excluído.`);
+    setDeleteTarget(null);
   }
 
   return (
@@ -345,7 +410,7 @@ export default function HqProjects() {
 
       {/* Kanban / List */}
       {!loading && (filter === "Todos" ? (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 items-start">
           {columns.map(col => {
             const colProjects = filtered.filter(p => p.status === col.status);
             return (
@@ -358,7 +423,7 @@ export default function HqProjects() {
                 <div className="space-y-3">
                   <AnimatePresence>
                     {colProjects.map((proj, i) => (
-                      <ProjectCard key={proj.id} proj={proj} index={i} onProgressChange={handleProgressChange} onClick={() => setDrawerProj(proj)} />
+                      <ProjectCard key={proj.id} proj={proj} index={i} onProgressChange={handleProgressChange} onClick={() => setDrawerProj(proj)} onDelete={setDeleteTarget} />
                     ))}
                   </AnimatePresence>
                   {colProjects.length === 0 && (
@@ -372,10 +437,10 @@ export default function HqProjects() {
           })}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 items-start">
           <AnimatePresence>
             {filtered.map((proj, i) => (
-              <ProjectCard key={proj.id} proj={proj} index={i} onProgressChange={handleProgressChange} onClick={() => setDrawerProj(proj)} />
+              <ProjectCard key={proj.id} proj={proj} index={i} onProgressChange={handleProgressChange} onClick={() => setDrawerProj(proj)} onDelete={setDeleteTarget} />
             ))}
           </AnimatePresence>
           {filtered.length === 0 && (
@@ -391,6 +456,13 @@ export default function HqProjects() {
           <NewProjectModal
             onClose={() => setShowModal(false)}
             onSave={saveProject}
+          />
+        )}
+        {deleteTarget && (
+          <ConfirmDeleteModal
+            name={deleteTarget.name}
+            onConfirm={handleDeleteConfirm}
+            onCancel={() => setDeleteTarget(null)}
           />
         )}
       </AnimatePresence>

@@ -15,6 +15,7 @@ export interface Project {
   start_date: string | null;
   end_date: string | null;
   description: string | null;
+  ifc_url?: string | null;
   created_at: string;
   // joined
   client?: { display_name: string; email: string } | null;

@@ -105,5 +105,7 @@ export function useChat(partnerId: string | null) {
       .is("read_at", null);
   }
 
-  return { messages, sendMessage, sending, markRead };
+  function clearMessages() { setMessages([]); }
+
+  return { messages, sendMessage, sending, markRead, clearMessages };
 }
