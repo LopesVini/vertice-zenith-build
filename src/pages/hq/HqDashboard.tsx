@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Users, Briefcase, CheckSquare, Target, Search, Filter, Download, ArrowUpRight, TrendingUp, Clock } from "lucide-react";
+import { Users, Briefcase, CheckSquare, Target, Search, Filter, ArrowUpRight, TrendingUp, Clock, Inbox } from "lucide-react";
 import { motion, useInView } from "framer-motion";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip,
-  PieChart, Pie, Cell, AreaChart, Area, Legend,
+  PieChart, Pie, Cell,
 } from "recharts";
 import { supabase } from "@/lib/supabase";
 
@@ -22,17 +22,67 @@ interface LiveProject {
   name: string;
   type: string;
   progress: number;
+  status: string;
   end_date: string | null;
   color: string;
   team: string[];
+  created_at: string;
+}
+
+interface RecentUpdate {
+  id: string;
+  title: string;
+  content: string | null;
+  created_at: string;
+  color: string;
+}
+
+// ── Helpers para gráficos ─────────────────────────────────────────────────────
+
+const MONTHS = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
+const TYPE_COLORS: Record<string, string> = {
+  "Arquitetura": "#2563EB", "Estrutural": "#7C3AED",
+  "Elétrico": "#F59E0B", "Hidrossanitário": "#10B981",
+  "Multidisciplinar": "#F43F5E",
+};
+
+function buildBarData(projects: LiveProject[]) {
+  const year = new Date().getFullYear();
+  const counts = new Array(12).fill(0);
+  for (const p of projects) {
+    const d = new Date(p.created_at);
+    if (d.getFullYear() === year) counts[d.getMonth()]++;
+  }
+  const upTo = new Date().getMonth() + 1;
+  return MONTHS.slice(0, upTo).map((name, i) => ({ name, value: counts[i] }));
+}
+
+function buildPieData(projects: LiveProject[]) {
+  const counts: Record<string, number> = {};
+  for (const p of projects) counts[p.type] = (counts[p.type] ?? 0) + 1;
+  return Object.entries(counts).map(([name, value]) => ({
+    name, value, color: TYPE_COLORS[name] ?? "#6366f1",
+  }));
+}
+
+function fmtRelative(iso: string) {
+  const diff = Date.now() - new Date(iso).getTime();
+  const m = Math.floor(diff / 60000);
+  if (m < 1) return "agora";
+  if (m < 60) return `${m}m`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h`;
+  return `${Math.floor(h / 24)}d`;
 }
 
 // ── Hook ──────────────────────────────────────────────────────────────────────
 
 function useDashData() {
-  const [stats, setStats]       = useState<DashStats>({ clients: 0, projects: 0, pendingUpdates: 0, conclusionRate: 0 });
-  const [liveProjs, setLiveProjs] = useState<LiveProject[]>([]);
-  const [loading, setLoading]   = useState(true);
+  const [stats, setStats]           = useState<DashStats>({ clients: 0, projects: 0, pendingUpdates: 0, conclusionRate: 0 });
+  const [liveProjs, setLiveProjs]   = useState<LiveProject[]>([]);
+  const [allProjects, setAllProjects] = useState<LiveProject[]>([]);
+  const [recentUpdates, setRecentUpdates] = useState<RecentUpdate[]>([]);
+  const [loading, setLoading]       = useState(true);
 
   useEffect(() => {
     async function load() {
@@ -40,64 +90,29 @@ function useDashData() {
         { count: clientCount },
         { data: projects },
         { count: pendingCount },
+        { data: updates },
       ] = await Promise.all([
         supabase.from("profiles").select("id", { count: "exact", head: true }).eq("role", "client"),
-        supabase.from("projects").select("id, name, type, progress, status, end_date, color, team").order("created_at", { ascending: false }),
+        supabase.from("projects").select("id, name, type, progress, status, end_date, color, team, created_at").order("created_at", { ascending: false }),
         supabase.from("updates").select("id", { count: "exact", head: true }).eq("color", "bg-accent"),
+        supabase.from("updates").select("id, title, content, created_at, color").order("created_at", { ascending: false }).limit(5),
       ]);
 
-      const allProjects = (projects ?? []) as LiveProject[];
-      const total = allProjects.length;
-      const done  = allProjects.filter((p: any) => p.status === "Concluído").length;
+      const all = (projects ?? []) as LiveProject[];
+      const total = all.length;
+      const done  = all.filter(p => p.status === "Concluído").length;
 
-      setStats({
-        clients:        clientCount ?? 0,
-        projects:       total,
-        pendingUpdates: pendingCount ?? 0,
-        conclusionRate: total > 0 ? Math.round((done / total) * 100) : 0,
-      });
-
-      setLiveProjs(allProjects.slice(0, 3));
+      setStats({ clients: clientCount ?? 0, projects: total, pendingUpdates: pendingCount ?? 0, conclusionRate: total > 0 ? Math.round((done / total) * 100) : 0 });
+      setAllProjects(all);
+      setLiveProjs(all.slice(0, 3));
+      setRecentUpdates((updates ?? []) as RecentUpdate[]);
       setLoading(false);
     }
     load();
   }, []);
 
-  return { stats, liveProjs, loading };
+  return { stats, liveProjs, allProjects, recentUpdates, loading };
 }
-
-// ── Static chart data (histórico mock por ora) ────────────────────────────────
-
-const barData = [
-  { name: "Jan", value: 4 }, { name: "Fev", value: 6 }, { name: "Mar", value: 3 },
-  { name: "Abr", value: 9 }, { name: "Mai", value: 11 }, { name: "Jun", value: 7 },
-  { name: "Jul", value: 8 }, { name: "Ago", value: 12 }, { name: "Set", value: 6 },
-];
-
-const areaData = [
-  { month: "Jan", ARQ: 2, EST: 1, ELE: 1, HID: 0 },
-  { month: "Fev", ARQ: 3, EST: 2, ELE: 1, HID: 1 },
-  { month: "Mar", ARQ: 2, EST: 2, ELE: 2, HID: 1 },
-  { month: "Abr", ARQ: 4, EST: 3, ELE: 2, HID: 2 },
-  { month: "Mai", ARQ: 5, EST: 4, ELE: 3, HID: 2 },
-  { month: "Jun", ARQ: 4, EST: 3, ELE: 3, HID: 3 },
-  { month: "Jul", ARQ: 6, EST: 5, ELE: 4, HID: 3 },
-  { month: "Ago", ARQ: 7, EST: 5, ELE: 4, HID: 4 },
-];
-
-const pieData = [
-  { name: "Arquitetura",     value: 34, color: "#2563EB" },
-  { name: "Estrutural",      value: 28, color: "#7C3AED" },
-  { name: "Elétrico",        value: 20, color: "#F59E0B" },
-  { name: "Hidrossanitário", value: 18, color: "#10B981" },
-];
-
-const activity = [
-  { icon: "📐", text: "Prancha ARQ-14 aprovada",  sub: "Residencial Alphaville", time: "2m"  },
-  { icon: "⚡", text: "Rev. Elétrica enviada",     sub: "Zenith Comercial",       time: "18m" },
-  { icon: "💧", text: "Clash HID resolvido",       sub: "Galpão Logístico Sul",  time: "1h"  },
-  { icon: "📋", text: "Briefing finalizado",       sub: "Villa Nova Casa",        time: "3h"  },
-];
 
 const colorMap: Record<string, string> = {
   blue:   "bg-blue-50   dark:bg-blue-500/10   text-blue-600",
@@ -152,7 +167,9 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 
 export default function HqDashboard() {
   const navigate = useNavigate();
-  const { stats, liveProjs, loading } = useDashData();
+  const { stats, liveProjs, allProjects, recentUpdates, loading } = useDashData();
+  const barData = buildBarData(allProjects);
+  const pieData = buildPieData(allProjects);
 
   const statCards = [
     { label: "Clientes Ativos",       value: stats.clients,        suffix: "",  icon: Users,       color: "blue",   trend: "total" },
@@ -275,45 +292,46 @@ export default function HqDashboard() {
           </button>
         </motion.div>
 
-        {/* Col 2 – Gráfico de Barras */}
+        {/* Col 2 – Projetos criados por mês (real) */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.35, duration: 0.5 }}
           className="bg-white dark:bg-navy-light/40 border border-zinc-200 dark:border-white/10 rounded-2xl p-6 shadow-sm flex flex-col"
         >
-          <div className="flex justify-between items-start mb-6">
-            <div>
-              <h3 className="font-bold text-sm text-navy dark:text-white">Entregas Mensais</h3>
-              <p className="text-xs text-zinc-500 mt-0.5">Projetos entregues por mês</p>
-            </div>
-            <div className="flex items-center gap-2">
-              <select className="bg-zinc-50 dark:bg-black/20 border border-zinc-200 dark:border-white/10 text-xs text-navy dark:text-white px-2 py-1.5 rounded-lg focus:outline-none">
-                <option>2026</option>
-                <option>2025</option>
-              </select>
-              <button className="w-8 h-8 rounded-lg border border-zinc-200 dark:border-white/10 flex items-center justify-center text-zinc-500 hover:bg-zinc-50 dark:hover:bg-white/5 transition-colors">
-                <Download size={13} />
-              </button>
-            </div>
+          <div className="mb-6">
+            <h3 className="font-bold text-sm text-navy dark:text-white">Projetos por Mês</h3>
+            <p className="text-xs text-zinc-500 mt-0.5">Projetos cadastrados em {new Date().getFullYear()}</p>
           </div>
           <div className="flex-1 min-h-[220px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={barData} margin={{ top: 5, right: 5, left: -25, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e4e4e7" className="dark:opacity-10" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#71717a' }} dy={8} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#71717a' }} />
-                <Tooltip content={<CustomTooltip />} cursor={{ fill: 'transparent' }} />
-                <Bar dataKey="value" name="Entregas" fill="#DBEAFE" radius={[6,6,0,0]} activeBar={{ fill: '#2563EB' }} />
-              </BarChart>
-            </ResponsiveContainer>
+            {barData.length === 0 || barData.every(d => d.value === 0) ? (
+              <div className="h-full flex flex-col items-center justify-center gap-2 text-zinc-400">
+                <Inbox size={28} className="opacity-40" />
+                <p className="text-xs">Nenhum projeto cadastrado ainda</p>
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={barData} margin={{ top: 5, right: 5, left: -25, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e4e4e7" className="dark:opacity-10" />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#71717a' }} dy={8} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#71717a' }} allowDecimals={false} />
+                  <Tooltip content={<CustomTooltip />} cursor={{ fill: 'transparent' }} />
+                  <Bar dataKey="value" name="Projetos" fill="#DBEAFE" radius={[6,6,0,0]} activeBar={{ fill: '#2563EB' }} />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
           </div>
           <div className="mt-4 pt-4 border-t border-zinc-100 dark:border-white/5 grid grid-cols-3 gap-3">
-            {[
-              { label: "Média mensal", value: "7.4" },
-              { label: "Melhor mês",   value: "Ago" },
-              { label: "Total 2026",   value: "66"  },
-            ].map((kpi, i) => (
+            {(() => {
+              const total = allProjects.length;
+              const monthsWithData = barData.filter(d => d.value > 0).length || 1;
+              const best = barData.reduce((a, b) => b.value > a.value ? b : a, { name: "—", value: 0 });
+              return [
+                { label: "Média mensal", value: total > 0 ? (total / monthsWithData).toFixed(1) : "0" },
+                { label: "Mês com mais", value: total > 0 ? best.name : "—" },
+                { label: `Total ${new Date().getFullYear()}`, value: String(total) },
+              ];
+            })().map((kpi, i) => (
               <div key={i} className="text-center">
                 <p className="text-base font-black text-navy dark:text-white">{kpi.value}</p>
                 <p className="text-[10px] text-zinc-500 mt-0.5">{kpi.label}</p>
@@ -322,7 +340,7 @@ export default function HqDashboard() {
           </div>
         </motion.div>
 
-        {/* Col 3 – Donut + Atividade Recente */}
+        {/* Col 3 – Distribuição real + Atualizações recentes reais */}
         <div className="flex flex-col gap-5">
           <motion.div
             initial={{ opacity: 0, x: 20 }}
@@ -332,29 +350,36 @@ export default function HqDashboard() {
           >
             <h3 className="font-bold text-sm text-navy dark:text-white mb-1">Distribuição por Disciplina</h3>
             <p className="text-xs text-zinc-500 mb-4">Portfólio atual de serviços</p>
-            <div className="flex items-center gap-4">
-              <div className="w-28 h-28 shrink-0">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie data={pieData} cx="50%" cy="50%" innerRadius={32} outerRadius={52} dataKey="value" strokeWidth={0}>
-                      {pieData.map((entry, i) => <Cell key={i} fill={entry.color} />)}
-                    </Pie>
-                    <Tooltip content={<CustomTooltip />} />
-                  </PieChart>
-                </ResponsiveContainer>
+            {pieData.length === 0 ? (
+              <div className="flex flex-col items-center justify-center gap-2 py-6 text-zinc-400">
+                <Inbox size={24} className="opacity-40" />
+                <p className="text-xs">Sem projetos ainda</p>
               </div>
-              <div className="flex-1 space-y-2">
-                {pieData.map((d, i) => (
-                  <div key={i} className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: d.color }} />
-                      <span className="text-xs text-zinc-600 dark:text-zinc-400">{d.name}</span>
+            ) : (
+              <div className="flex items-center gap-4">
+                <div className="w-28 h-28 shrink-0">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie data={pieData} cx="50%" cy="50%" innerRadius={32} outerRadius={52} dataKey="value" strokeWidth={0}>
+                        {pieData.map((entry, i) => <Cell key={i} fill={entry.color} />)}
+                      </Pie>
+                      <Tooltip content={<CustomTooltip />} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+                <div className="flex-1 space-y-2">
+                  {pieData.map((d, i) => (
+                    <div key={i} className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: d.color }} />
+                        <span className="text-xs text-zinc-600 dark:text-zinc-400">{d.name}</span>
+                      </div>
+                      <span className="text-xs font-bold text-navy dark:text-white">{d.value}</span>
                     </div>
-                    <span className="text-xs font-bold text-navy dark:text-white">{d.value}%</span>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
           </motion.div>
 
           <motion.div
@@ -363,71 +388,35 @@ export default function HqDashboard() {
             transition={{ delay: 0.5, duration: 0.5 }}
             className="bg-white dark:bg-navy-light/40 border border-zinc-200 dark:border-white/10 rounded-2xl p-6 shadow-sm flex-1"
           >
-            <h3 className="font-bold text-sm text-navy dark:text-white mb-4">Atividade Recente</h3>
-            <div className="space-y-3">
-              {activity.map((a, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, x: 10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.55 + i * 0.07 }}
-                  className="flex items-start gap-3 p-2 rounded-xl hover:bg-zinc-50 dark:hover:bg-white/5 transition-colors cursor-default"
-                >
-                  <div className="w-8 h-8 rounded-lg bg-zinc-100 dark:bg-black/20 flex items-center justify-center text-sm shrink-0">
-                    {a.icon}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-bold text-navy dark:text-white truncate">{a.text}</p>
-                    <p className="text-[10px] text-zinc-500 truncate">{a.sub}</p>
-                  </div>
-                  <span className="text-[10px] text-zinc-400 shrink-0">{a.time}</span>
-                </motion.div>
-              ))}
-            </div>
+            <h3 className="font-bold text-sm text-navy dark:text-white mb-4">Atualizações Recentes</h3>
+            {recentUpdates.length === 0 ? (
+              <div className="flex flex-col items-center justify-center gap-2 py-6 text-zinc-400">
+                <Inbox size={24} className="opacity-40" />
+                <p className="text-xs">Nenhuma atualização ainda</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {recentUpdates.map((u, i) => (
+                  <motion.div
+                    key={u.id}
+                    initial={{ opacity: 0, x: 10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.55 + i * 0.07 }}
+                    className="flex items-start gap-3 p-2 rounded-xl hover:bg-zinc-50 dark:hover:bg-white/5 transition-colors cursor-default"
+                  >
+                    <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${u.color || "bg-blue-500"}`} />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-bold text-navy dark:text-white truncate">{u.title}</p>
+                      {u.content && <p className="text-[10px] text-zinc-500 truncate">{u.content}</p>}
+                    </div>
+                    <span className="text-[10px] text-zinc-400 shrink-0">{fmtRelative(u.created_at)}</span>
+                  </motion.div>
+                ))}
+              </div>
+            )}
           </motion.div>
         </div>
       </div>
-
-      {/* ── Bottom Row – Area Chart ───────────────────────────────────────── */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.55, duration: 0.5 }}
-        className="bg-white dark:bg-navy-light/40 border border-zinc-200 dark:border-white/10 rounded-2xl p-6 shadow-sm"
-      >
-        <div className="flex justify-between items-start mb-6">
-          <div>
-            <h3 className="font-bold text-navy dark:text-white">Volume de Projetos por Disciplina</h3>
-            <p className="text-xs text-zinc-500 mt-0.5">Evolução mensal — projetos ativos por área técnica</p>
-          </div>
-          <button className="w-8 h-8 rounded-lg border border-zinc-200 dark:border-white/10 flex items-center justify-center text-zinc-500 hover:bg-zinc-50 dark:hover:bg-white/5 transition-colors">
-            <Download size={13} />
-          </button>
-        </div>
-        <div className="h-[200px] w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={areaData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
-              <defs>
-                {[["ARQ","#2563EB"],["EST","#7C3AED"],["ELE","#F59E0B"],["HID","#10B981"]].map(([key, color]) => (
-                  <linearGradient key={key} id={`grad${key}`} x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%"  stopColor={color} stopOpacity={0.25} />
-                    <stop offset="95%" stopColor={color} stopOpacity={0.02} />
-                  </linearGradient>
-                ))}
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e4e4e7" className="dark:opacity-10" />
-              <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#71717a' }} dy={8} />
-              <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#71717a' }} />
-              <Tooltip content={<CustomTooltip />} />
-              <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '12px' }} />
-              <Area type="monotone" dataKey="ARQ" name="Arquitetura"     stroke="#2563EB" fill="url(#gradARQ)" strokeWidth={2} dot={false} />
-              <Area type="monotone" dataKey="EST" name="Estrutural"      stroke="#7C3AED" fill="url(#gradEST)" strokeWidth={2} dot={false} />
-              <Area type="monotone" dataKey="ELE" name="Elétrico"        stroke="#F59E0B" fill="url(#gradELE)" strokeWidth={2} dot={false} />
-              <Area type="monotone" dataKey="HID" name="Hidrossanitário" stroke="#10B981" fill="url(#gradHID)" strokeWidth={2} dot={false} />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
-      </motion.div>
 
     </div>
   );

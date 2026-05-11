@@ -141,12 +141,7 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
   );
 }
 
-const MOCK_NOTIFICATIONS = [
-  { id: 1, title: "Novo orçamento recebido", desc: "Cliente João Silva enviou uma solicitação de orçamento.", time: "5 min", read: false },
-  { id: 2, title: "Projeto atualizado", desc: "Casa Alto da Boa Vista avançou para 78% de conclusão.", time: "1h", read: false },
-  { id: 3, title: "Entrega aprovada", desc: "Prancha EP-14 aprovada pelo cliente Residência Morumbi.", time: "3h", read: true },
-  { id: 4, title: "Marco concluído", desc: "Compatibilização BIM finalizada no Edifício Central Park.", time: "1d", read: true },
-];
+const MOCK_NOTIFICATIONS: { id: number; title: string; desc: string; time: string; read: boolean }[] = [];
 
 export default function HqLayout() {
   const { session, loading, signOut, displayName } = useAuth();
