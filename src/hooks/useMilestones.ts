@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { supabase } from "@/lib/supabase";
+import { supabase, supabaseAdmin } from "@/lib/supabase";
 
 export interface Milestone {
   id: string;
@@ -57,7 +57,7 @@ export function useMilestones(projectId: string | null | undefined) {
   async function syncProgress(updated: Milestone[]) {
     if (!projectId) return;
     const progress = calcProgress(updated);
-    await supabase.from("projects").update({ progress }).eq("id", projectId);
+    await supabaseAdmin.from("projects").update({ progress }).eq("id", projectId);
   }
 
   async function saveMilestone(m: Omit<Milestone, "id">) {
@@ -91,7 +91,20 @@ export function useMilestones(projectId: string | null | undefined) {
   }
 
   async function approveMilestone(id: string) {
-    return updateMilestone(id, { approved_at: new Date().toISOString(), status: "done" });
+    const changes = { approved_at: new Date().toISOString(), status: "done" as const };
+    const { data, error } = await supabaseAdmin
+      .from("milestones")
+      .update(changes)
+      .eq("id", id)
+      .select();
+
+    if (error) return { error };
+    if (!data || data.length === 0) return { error: new Error("Falha ao aprovar entrega.") };
+
+    const updated = milestones.map((m) => (m.id === id ? { ...m, ...changes } : m));
+    setMilestones(updated);
+    await syncProgress(updated);
+    return { error: null };
   }
 
   async function updateDelivered(id: string, delivered_items: number) {
