@@ -71,13 +71,23 @@ export function useMilestones(projectId: string | null | undefined) {
   }
 
   async function updateMilestone(id: string, changes: Partial<Milestone>) {
-    const { error } = await supabase.from("milestones").update(changes).eq("id", id);
-    if (!error) {
-      const updated = milestones.map((m) => (m.id === id ? { ...m, ...changes } : m));
-      setMilestones(updated);
-      await syncProgress(updated);
+    const { data, error } = await supabase
+      .from("milestones")
+      .update(changes)
+      .eq("id", id)
+      .select();
+
+    if (error) return { error };
+
+    // RLS pode bloquear silenciosamente — retorna 0 linhas sem erro
+    if (!data || data.length === 0) {
+      return { error: new Error("Sem permissão para salvar esta alteração.") };
     }
-    return { error };
+
+    const updated = milestones.map((m) => (m.id === id ? { ...m, ...changes } : m));
+    setMilestones(updated);
+    await syncProgress(updated);
+    return { error: null };
   }
 
   async function approveMilestone(id: string) {

@@ -1,5 +1,6 @@
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import { motion } from "framer-motion";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
@@ -582,6 +583,21 @@ export default function ProjectDashboard() {
   const { milestones, loading: loadingMilestones, approveMilestone } = useMilestones(project?.id);
   const { updates, loading: loadingUpdates } = useUpdates(project?.id);
 
+  // Rastreia updates lidos via localStorage para persistir entre reloads
+  const READ_KEY = project?.id ? `vertice_read_${project.id}` : null;
+  const [readIds, setReadIds] = useState<Set<string>>(() => {
+    if (!READ_KEY) return new Set();
+    try { return new Set(JSON.parse(localStorage.getItem(READ_KEY) ?? "[]")); } catch { return new Set(); }
+  });
+  const markRead = useCallback((id: string) => {
+    setReadIds(prev => {
+      const next = new Set(prev).add(id);
+      if (READ_KEY) { try { localStorage.setItem(READ_KEY, JSON.stringify([...next])); } catch {} }
+      return next;
+    });
+  }, [READ_KEY]);
+  const unreadCount = updates.filter(u => !readIds.has(u.id)).length;
+
   const calculatedProgress = calcProgress(milestones);
   const doneCount   = milestones.filter(m => m.status === "done").length;
   const approvedCount = milestones.filter(m => !!m.approved_at).length;
@@ -632,7 +648,8 @@ INSTRUÇÕES:
 
   const { messages, isLoading, sendMessage, clearMessages } = useGroqChat(
     SYSTEM_PROMPT,
-    "Olá! Sou a Vertice AI. Posso esclarecer dúvidas sobre seu projeto, o portal ou engenharia em geral."
+    "Olá! Sou a Vertice AI. Posso esclarecer dúvidas sobre seu projeto, o portal ou engenharia em geral.",
+    project?.id
   );
 
   useEffect(() => {
@@ -747,7 +764,11 @@ INSTRUÇÕES:
                       )}
                     </div>
                     <button
-                      onClick={() => approveMilestone(m.id)}
+                      onClick={async () => {
+                        const { error } = await approveMilestone(m.id);
+                        if (error) toast.error("Não foi possível salvar a aprovação. Tente novamente.");
+                        else toast.success(`Fase "${m.name}" aprovada com sucesso!`);
+                      }}
                       className="shrink-0 text-[10px] font-bold px-3 py-1 rounded-lg bg-amber-400 hover:bg-amber-500 text-white transition-colors"
                     >
                       Aprovar entrega
@@ -918,24 +939,31 @@ INSTRUÇÕES:
               <div className="flex items-center gap-2">
                 <div className="bg-accent text-white text-[9px] font-bold px-1.5 py-0.5 rounded">{updates.length}</div>
                 <span className="text-[10px] font-bold text-navy dark:text-white tracking-widest">ATUALIZAÇÕES</span>
+                {unreadCount > 0 && (
+                  <span className="text-[8px] font-bold bg-red-500 text-white px-1 py-0.5 rounded-full">{unreadCount} nova{unreadCount > 1 ? "s" : ""}</span>
+                )}
               </div>
               <button onClick={() => navigate("/portal/updates")} className="text-[9px] text-zinc-500 hover:text-navy dark:hover:text-white">VER TUDO</button>
             </div>
             <div className="p-2 space-y-1.5 flex-1 overflow-y-auto">
               {updates.length === 0 ? (
                 <div className="flex items-center justify-center h-full text-xs text-zinc-400 py-4">Sem atualizações ainda.</div>
-              ) : updates.slice(0, 5).map(u => (
-                <div key={u.id} className="bg-zinc-50 dark:bg-black/30 border border-zinc-200 dark:border-white/10 p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-white/5 transition-colors cursor-pointer">
+              ) : updates.slice(0, 5).map(u => {
+                const isUnread = !readIds.has(u.id);
+                return (
+                <div key={u.id} onClick={() => markRead(u.id)} className={`border p-2 rounded-lg transition-colors cursor-pointer ${isUnread ? "bg-accent/5 dark:bg-accent/10 border-accent/20 dark:border-accent/20" : "bg-zinc-50 dark:bg-black/30 border-zinc-200 dark:border-white/10 hover:bg-zinc-100 dark:hover:bg-white/5"}`}>
                   <div className="flex items-center gap-2 mb-0.5">
-                    <div className={`w-1.5 h-1.5 rounded-full ${u.color}`} />
-                    <span className="text-[10px] font-bold text-navy dark:text-white truncate">{u.title}</span>
+                    <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${u.color}`} />
+                    <span className={`text-[10px] font-bold truncate ${isUnread ? "text-navy dark:text-white" : "text-zinc-600 dark:text-zinc-300"}`}>{u.title}</span>
+                    {isUnread && <span className="ml-auto shrink-0 w-1.5 h-1.5 rounded-full bg-accent" />}
                   </div>
                   {u.content && <p className="text-[10px] text-zinc-500 dark:text-zinc-400 leading-snug line-clamp-2">{u.content}</p>}
                   <p className="text-[9px] text-zinc-400 dark:text-zinc-600 mt-1">
                     {new Date(u.created_at).toLocaleDateString("pt-BR")} • {u.author_name}
                   </p>
                 </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>

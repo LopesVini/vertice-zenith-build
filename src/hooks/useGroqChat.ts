@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export interface ChatMessage {
   id: number;
@@ -6,13 +6,24 @@ export interface ChatMessage {
   content: string;
 }
 
-export function useGroqChat(systemPrompt: string, initialMessage?: string) {
-  const [messages, setMessages] = useState<ChatMessage[]>(
-    initialMessage
-      ? [{ id: 0, role: "assistant", content: initialMessage }]
-      : []
-  );
+export function useGroqChat(systemPrompt: string, initialMessage?: string, storageKey?: string) {
+  const STORAGE_KEY = storageKey ? `vertice_chat_${storageKey}` : null;
+
+  const [messages, setMessages] = useState<ChatMessage[]>(() => {
+    if (STORAGE_KEY) {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) return JSON.parse(saved) as ChatMessage[];
+      } catch { /* ignore */ }
+    }
+    return initialMessage ? [{ id: 0, role: "assistant", content: initialMessage }] : [];
+  });
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (!STORAGE_KEY) return;
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(messages)); } catch { /* ignore */ }
+  }, [messages, STORAGE_KEY]);
 
   async function sendMessage(text: string) {
     const trimmed = text.trim();
@@ -68,7 +79,9 @@ export function useGroqChat(systemPrompt: string, initialMessage?: string) {
   }
 
   function clearMessages() {
-    setMessages(initialMessage ? [{ id: 0, role: "assistant", content: initialMessage }] : []);
+    const initial: ChatMessage[] = initialMessage ? [{ id: 0, role: "assistant", content: initialMessage }] : [];
+    setMessages(initial);
+    if (STORAGE_KEY) { try { localStorage.removeItem(STORAGE_KEY); } catch { /* ignore */ } }
   }
 
   return { messages, isLoading, sendMessage, clearMessages };
