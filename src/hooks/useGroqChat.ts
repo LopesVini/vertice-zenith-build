@@ -8,22 +8,32 @@ export interface ChatMessage {
 
 export function useGroqChat(systemPrompt: string, initialMessage?: string, storageKey?: string) {
   const STORAGE_KEY = storageKey ? `vertice_chat_${storageKey}` : null;
+  const defaultMessages: ChatMessage[] = initialMessage
+    ? [{ id: 0, role: "assistant", content: initialMessage }]
+    : [];
 
-  const [messages, setMessages] = useState<ChatMessage[]>(() => {
-    if (STORAGE_KEY) {
-      try {
-        const saved = localStorage.getItem(STORAGE_KEY);
-        if (saved) return JSON.parse(saved) as ChatMessage[];
-      } catch { /* ignore */ }
-    }
-    return initialMessage ? [{ id: 0, role: "assistant", content: initialMessage }] : [];
-  });
+  const [messages, setMessages] = useState<ChatMessage[]>(defaultMessages);
   const [isLoading, setIsLoading] = useState(false);
+  const [storageLoaded, setStorageLoaded] = useState(false);
 
+  // Carrega do localStorage quando storageKey ficar disponível (projeto ainda carregando no 1º render)
   useEffect(() => {
-    if (!STORAGE_KEY) return;
+    if (!STORAGE_KEY || storageLoaded) return;
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved) as ChatMessage[];
+        if (parsed.length > 0) setMessages(parsed);
+      }
+    } catch { /* ignore */ }
+    setStorageLoaded(true);
+  }, [STORAGE_KEY, storageLoaded]);
+
+  // Salva no localStorage sempre que messages mudar (só após ter carregado)
+  useEffect(() => {
+    if (!STORAGE_KEY || !storageLoaded) return;
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(messages)); } catch { /* ignore */ }
-  }, [messages, STORAGE_KEY]);
+  }, [messages, STORAGE_KEY, storageLoaded]);
 
   async function sendMessage(text: string) {
     const trimmed = text.trim();
