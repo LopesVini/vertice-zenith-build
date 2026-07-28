@@ -2,6 +2,7 @@ import { Navigate, Outlet, NavLink, Link } from "react-router-dom";
 import { useAuth } from "@/hooks/data/useAuth";
 import { Loader2, LogOut, LayoutDashboard, Box, History, Layers, MoreVertical, User, UserCircle, Sun, Moon } from "lucide-react";
 import { useTheme } from "@/components/layout/ThemeProvider";
+import NotificationBell from "@/components/layout/NotificationBell";
 import VerticeLogo from "@/components/layout/VerticeLogo";
 import FloatingChat from "@/components/chat/FloatingChat";
 import MobileTabBar from "@/components/layout/MobileTabBar";
@@ -39,11 +40,14 @@ export default function PortalLayout() {
     <div className="min-h-screen bg-zinc-50 dark:bg-navy-dark text-navy dark:text-white flex transition-colors duration-300">
       {/* Sidebar minimalista */}
       <aside className="hidden lg:flex lg:w-64 border-r border-zinc-200 dark:border-white/5 bg-white/50 dark:bg-navy/20 flex flex-col h-screen sticky top-0 backdrop-blur-xl z-40 transition-all duration-300">
-        <div className="h-20 flex items-center justify-center lg:justify-start lg:px-8 border-b border-zinc-200 dark:border-white/5">
-          <VerticeLogo className="w-9 h-9 shrink-0" />
-          <span className="hidden lg:block ml-3 font-sans font-bold tracking-widest uppercase text-navy dark:text-white">
-            VEBRAM
-          </span>
+        <div className="h-20 flex items-center justify-between px-6 border-b border-zinc-200 dark:border-white/5">
+          <div className="flex items-center min-w-0">
+            <VerticeLogo className="w-9 h-9 shrink-0" />
+            <span className="ml-3 font-sans font-bold tracking-widest uppercase text-navy dark:text-white truncate">
+              VEBRAM
+            </span>
+          </div>
+          <NotificationBell align="left" />
         </div>
 
         <nav className="flex-1 py-8 flex flex-col gap-4 px-4 lg:px-6">
@@ -125,13 +129,16 @@ export default function PortalLayout() {
             VEBRAM
           </span>
         </div>
-        <button
-          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-          className="w-10 h-10 flex items-center justify-center rounded-full text-zinc-500 hover:text-navy dark:hover:text-white transition-colors"
-          aria-label="Alternar tema"
-        >
-          {theme === "dark" ? <Moon size={18} /> : <Sun size={18} />}
-        </button>
+        <div className="flex items-center gap-1">
+          <NotificationBell align="right" />
+          <button
+            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+            className="w-10 h-10 flex items-center justify-center rounded-full text-zinc-500 hover:text-navy dark:hover:text-white transition-colors"
+            aria-label="Alternar tema"
+          >
+            {theme === "dark" ? <Moon size={18} /> : <Sun size={18} />}
+          </button>
+        </div>
       </header>
 
       {/* Main Content Area */}

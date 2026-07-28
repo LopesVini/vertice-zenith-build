@@ -225,6 +225,16 @@ export default function FloatingChat() {
     void incrementUnread;
   }, [incrementUnread]);
 
+  // Abre o chat ao clicar numa notificação de mensagem (o sino dispara este
+  // evento). O chat não tem rota própria, então usamos um evento global.
+  useEffect(() => {
+    function openChat() {
+      setIsOpen(true);
+    }
+    window.addEventListener("open-chat", openChat);
+    return () => window.removeEventListener("open-chat", openChat);
+  }, []);
+
   function handleSelectContact(contact: Contact) {
     setSelectedContact(contact);
     markContactRead(contact.id);

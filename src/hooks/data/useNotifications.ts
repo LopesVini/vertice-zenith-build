@@ -8,6 +8,7 @@ export interface AppNotification {
   type: string;
   title: string;
   body: string | null;
+  link: string | null;
   created_at: string;
   read_at: string | null;
 }
@@ -23,7 +24,7 @@ export function useNotifications() {
     if (!user) return;
     const { data } = await supabase
       .from("notifications")
-      .select("id, actor_id, type, title, body, created_at, read_at")
+      .select("id, actor_id, type, title, body, link, created_at, read_at")
       .order("created_at", { ascending: false })
       .limit(30);
     setNotifications((data as AppNotification[]) || []);
@@ -33,8 +34,10 @@ export function useNotifications() {
     refetch();
     if (!user) return;
 
+    // Sufixo único: o Portal monta o sino em dois pontos (header mobile e
+    // sidebar desktop); sem isso os dois canais colidiriam no mesmo tópico.
     const channel = supabase
-      .channel(`notifications:${user.id}`)
+      .channel(`notifications:${user.id}:${crypto.randomUUID()}`)
       .on(
         "postgres_changes",
         {

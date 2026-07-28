@@ -1,9 +1,9 @@
 import { Navigate, Outlet, NavLink, Link, useNavigate, useLocation } from "react-router-dom";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useAuth } from "@/hooks/data/useAuth";
-import { useNotifications, timeAgo } from "@/hooks/data/useNotifications";
-import { Loader2, LogOut, LayoutDashboard, Briefcase, Users, Search, Bell, Settings, Sun, Moon, UserCircle, CheckCheck, Plus, UserPlus, ArrowRight, Command, Rss, CalendarDays, BarChart3, Gauge, Contact, KanbanSquare, ListChecks, SlidersHorizontal, BookOpen } from "lucide-react";
+import { Loader2, LogOut, LayoutDashboard, Briefcase, Users, Search, Settings, Sun, Moon, UserCircle, Plus, UserPlus, ArrowRight, Command, Rss, CalendarDays, BarChart3, Gauge, Contact, KanbanSquare, ListChecks, SlidersHorizontal, BookOpen } from "lucide-react";
 import { useTheme } from "@/components/layout/ThemeProvider";
+import NotificationBell from "@/components/layout/NotificationBell";
 import VerticeLogo from "@/components/layout/VerticeLogo";
 import FloatingChat from "@/components/chat/FloatingChat";
 import MobileTabBar from "@/components/layout/MobileTabBar";
@@ -161,18 +161,11 @@ export default function HqLayout() {
   const { theme, setTheme } = useTheme();
   const location = useLocation();
   const [showPalette, setShowPalette] = useState(false);
-  const [showBell, setShowBell] = useState(false);
   const paletteRef = useRef<HTMLDivElement>(null);
-  const bellRef = useRef<HTMLDivElement>(null);
   const [showGuide, setShowGuide] = useState(false);
-
-  // Notificações reais (ex.: cliente comentou numa atualização),
-  // vindas do banco com chegada ao vivo via Realtime.
-  const { notifications, unreadCount, markRead, markAllRead } = useNotifications();
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
-      if (bellRef.current && !bellRef.current.contains(e.target as Node)) setShowBell(false);
       if (paletteRef.current && !paletteRef.current.contains(e.target as Node)) setShowPalette(false);
     }
     document.addEventListener("mousedown", handleClickOutside);
@@ -313,51 +306,7 @@ export default function HqLayout() {
             </div>
 
             {/* Bell / Notificações */}
-            <div ref={bellRef} className="relative">
-              <button
-                onClick={() => setShowBell((v) => !v)}
-                className="w-9 h-9 lg:w-10 lg:h-10 bg-white dark:bg-navy-light/40 border border-zinc-200 dark:border-white/10 rounded-full flex items-center justify-center text-zinc-500 hover:text-navy dark:hover:text-white transition-colors shadow-sm relative"
-              >
-                <Bell size={18} />
-                {unreadCount > 0 && (
-                  <div className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-navy-dark" />
-                )}
-              </button>
-
-              {showBell && (
-                <div className="fixed inset-x-3 top-16 w-auto lg:absolute lg:inset-x-auto lg:right-0 lg:top-12 lg:w-80 bg-white dark:bg-navy-light border border-zinc-200 dark:border-white/10 rounded-2xl shadow-2xl z-50 overflow-hidden">
-                  <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-100 dark:border-white/5">
-                    <span className="font-bold text-sm text-navy dark:text-white">Notificações</span>
-                    {unreadCount > 0 && (
-                      <button onClick={markAllRead} className="flex items-center gap-1 text-xs text-blue-500 hover:text-blue-600 font-semibold">
-                        <CheckCheck size={13} /> Marcar todas como lidas
-                      </button>
-                    )}
-                  </div>
-                  <div className="max-h-80 overflow-y-auto divide-y divide-zinc-100 dark:divide-white/5">
-                    {notifications.length === 0 && (
-                      <p className="text-xs text-zinc-400 text-center py-8 px-4">
-                        Nenhuma notificação por aqui ainda.
-                      </p>
-                    )}
-                    {notifications.map((n) => (
-                      <div
-                        key={n.id}
-                        onClick={() => markRead(n.id)}
-                        className={`flex gap-3 px-4 py-3 cursor-pointer transition-colors hover:bg-zinc-50 dark:hover:bg-white/5 ${!n.read_at ? "bg-blue-50/50 dark:bg-blue-500/5" : ""}`}
-                      >
-                        <div className={`mt-1 w-2 h-2 rounded-full flex-shrink-0 ${n.read_at ? "bg-zinc-300 dark:bg-zinc-600" : "bg-blue-500"}`} />
-                        <div className="flex-1 min-w-0">
-                          <p className={`text-xs font-bold truncate ${n.read_at ? "text-zinc-500 dark:text-zinc-400" : "text-navy dark:text-white"}`}>{n.title}</p>
-                          <p className="text-xs text-zinc-500 dark:text-zinc-500 mt-0.5 line-clamp-2">{n.body}</p>
-                          <p className="text-[10px] text-zinc-400 mt-1">{timeAgo(n.created_at)}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
+            <NotificationBell align="right" />
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
