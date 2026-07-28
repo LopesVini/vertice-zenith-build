@@ -8,26 +8,38 @@ export interface MobileTab {
 }
 
 // Barra de abas fixa inferior, visível só abaixo de lg (a sidebar assume no desktop).
+// Renderizada dentro do `.sys` dos dois layouts, então usa os tokens do sistema.
 export default function MobileTabBar({ tabs }: { tabs: MobileTab[] }) {
   return (
     <nav
       aria-label="Navegação principal"
-      className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 dark:bg-navy-light/95 backdrop-blur-md border-t border-zinc-200 dark:border-white/10 pb-[env(safe-area-inset-bottom)]"
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-sys-rule bg-sys-paper/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md lg:hidden"
     >
-      <div className="flex h-14">
+      <div className="flex h-16">
         {tabs.map((tab) => (
           <NavLink
             key={tab.to}
             to={tab.to}
             end={tab.end}
             className={({ isActive }) =>
-              `flex-1 flex flex-col items-center justify-center gap-0.5 transition-colors ${
-                isActive ? "text-primary dark:text-accent" : "text-zinc-500 dark:text-zinc-400"
+              `relative flex flex-1 flex-col items-center justify-center gap-1 transition-colors duration-150 ${
+                isActive ? "text-sys-accent" : "text-sys-ink-3"
               }`
             }
           >
-            {tab.icon}
-            <span className="text-[10px] font-medium leading-none">{tab.label}</span>
+            {({ isActive }) => (
+              <>
+                {/* Cota de aba ativa: régua no topo. Cor sozinha não pode carregar
+                    o estado — em tela de celular sob sol de obra ela some. */}
+                <span
+                  className={`absolute inset-x-4 top-0 h-[2px] bg-sys-accent transition-opacity duration-150 ${
+                    isActive ? "opacity-100" : "opacity-0"
+                  }`}
+                />
+                {tab.icon}
+                <span className="sys-rotulo leading-none text-current">{tab.label}</span>
+              </>
+            )}
           </NavLink>
         ))}
       </div>

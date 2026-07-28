@@ -27,14 +27,20 @@ describe("MobileTabBar", () => {
     expect(screen.getByRole("link", { name: /atualizações/i })).toHaveAttribute("href", "/portal/updates");
   });
 
-  it("marca a aba ativa com text-primary", () => {
+  it("marca a aba ativa com o acento do sistema", () => {
     renderAt("/portal/bim");
-    expect(screen.getByRole("link", { name: /bim/i }).className).toContain("text-primary");
-    expect(screen.getByRole("link", { name: /dashboard/i }).className).not.toContain("text-primary");
+    const ativa = screen.getByRole("link", { name: /bim/i });
+    // aria-current é o que realmente comunica o estado (leitores de tela);
+    // o token de cor é só o reforço visual dele.
+    expect(ativa).toHaveAttribute("aria-current", "page");
+    expect(ativa.className).toContain("text-sys-accent");
+    expect(screen.getByRole("link", { name: /dashboard/i }).className).not.toContain("text-sys-accent");
   });
 
   it("aba Dashboard com end não fica ativa em sub-rotas", () => {
     renderAt("/portal/updates");
-    expect(screen.getByRole("link", { name: /dashboard/i }).className).not.toContain("text-primary");
+    const dashboard = screen.getByRole("link", { name: /dashboard/i });
+    expect(dashboard).not.toHaveAttribute("aria-current");
+    expect(dashboard.className).not.toContain("text-sys-accent");
   });
 });

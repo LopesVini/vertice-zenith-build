@@ -54,21 +54,27 @@ export default function NotificationBell({
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen((v) => !v)}
-        className="w-9 h-9 lg:w-10 lg:h-10 bg-white dark:bg-navy-light/40 border border-zinc-200 dark:border-white/10 rounded-full flex items-center justify-center text-zinc-500 hover:text-navy dark:hover:text-white transition-colors shadow-sm relative"
-        aria-label="Notificações"
+        className="relative flex h-10 w-10 items-center justify-center rounded-sys border border-sys-rule-strong text-sys-ink-2 transition-colors duration-150 hover:bg-sys-ink/[0.05] hover:text-sys-ink"
+        aria-label={
+          unreadCount > 0 ? `Notificações (${unreadCount} não lidas)` : "Notificações"
+        }
       >
-        <Bell size={18} />
+        <Bell size={17} />
+        {/* Sinal de pendência em ocre — o mesmo tom que marca "há algo a fazer"
+            em todo o sistema. A contagem no aria-label evita depender só da cor. */}
         {unreadCount > 0 && (
-          <div className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-navy-dark" />
+          <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 bg-sys-ochre" />
         )}
       </button>
 
       {open && (
         <div
-          className={`fixed inset-x-3 top-16 w-auto lg:absolute lg:inset-x-auto ${desktopAnchor} lg:top-12 lg:w-80 bg-white dark:bg-navy-light border border-zinc-200 dark:border-white/10 rounded-2xl shadow-2xl z-50 overflow-hidden`}
+          className={`fixed inset-x-3 top-16 z-50 w-auto overflow-hidden rounded-sys border border-sys-rule-strong bg-sys-raised shadow-sys lg:absolute lg:inset-x-auto ${desktopAnchor} lg:top-12 lg:w-80`}
         >
-          <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-100 dark:border-white/5">
-            <span className="font-bold text-sm text-navy dark:text-white">Notificações</span>
+          <div className="flex items-center justify-between border-b border-sys-rule px-4 py-3">
+            <span className="font-sans text-[13px] font-extrabold uppercase tracking-tight text-sys-ink">
+              Notificações
+            </span>
             <div className="flex items-center gap-3">
               {/* Ativar/desativar push (site fechado) neste aparelho */}
               {push.supported && push.permission !== "denied" && (
@@ -80,7 +86,7 @@ export default function NotificationBell({
                       ? "Desativar notificações neste aparelho"
                       : "Ativar notificações neste aparelho"
                   }
-                  className="flex items-center gap-1 text-xs font-semibold text-zinc-500 hover:text-navy dark:hover:text-white disabled:opacity-50"
+                  className="sys-rotulo flex items-center gap-1.5 text-sys-ink-3 transition-colors hover:text-sys-ink disabled:opacity-45"
                 >
                   {push.subscribed ? <BellOff size={13} /> : <BellRing size={13} />}
                   <span className="hidden sm:inline">{push.subscribed ? "Desativar" : "Ativar"}</span>
@@ -89,16 +95,16 @@ export default function NotificationBell({
               {unreadCount > 0 && (
                 <button
                   onClick={markAllRead}
-                  className="flex items-center gap-1 text-xs text-blue-500 hover:text-blue-600 font-semibold"
+                  className="sys-rotulo flex items-center gap-1.5 text-sys-accent transition-colors hover:text-sys-ink"
                 >
                   <CheckCheck size={13} /> Ler todas
                 </button>
               )}
             </div>
           </div>
-          <div className="max-h-80 overflow-y-auto divide-y divide-zinc-100 dark:divide-white/5">
+          <div className="max-h-80 divide-y divide-sys-rule overflow-y-auto">
             {notifications.length === 0 && (
-              <p className="text-xs text-zinc-400 text-center py-8 px-4">
+              <p className="px-4 py-8 text-center text-[13px] text-sys-ink-3">
                 Nenhuma notificação por aqui ainda.
               </p>
             )}
@@ -106,25 +112,29 @@ export default function NotificationBell({
               <div
                 key={n.id}
                 onClick={() => handleOpen(n)}
-                className={`flex gap-3 px-4 py-3 transition-colors hover:bg-zinc-50 dark:hover:bg-white/5 ${
+                className={`relative flex gap-3 px-4 py-3 transition-colors duration-150 hover:bg-sys-ink/[0.04] ${
                   n.link ? "cursor-pointer" : "cursor-default"
-                } ${!n.read_at ? "bg-blue-50/50 dark:bg-blue-500/5" : ""}`}
+                }`}
               >
-                <div
-                  className={`mt-1 w-2 h-2 rounded-full flex-shrink-0 ${
-                    n.read_at ? "bg-zinc-300 dark:bg-zinc-600" : "bg-blue-500"
+                {/* Não lida = régua ocre na margem + tinta cheia. */}
+                {!n.read_at && <span className="absolute inset-y-0 left-0 w-[2px] bg-sys-ochre" />}
+                <span
+                  className={`mt-1.5 h-1.5 w-1.5 flex-shrink-0 ${
+                    n.read_at ? "bg-sys-rule-strong" : "bg-sys-ochre"
                   }`}
                 />
-                <div className="flex-1 min-w-0">
+                <div className="min-w-0 flex-1">
                   <p
-                    className={`text-xs font-bold truncate ${
-                      n.read_at ? "text-zinc-500 dark:text-zinc-400" : "text-navy dark:text-white"
+                    className={`truncate text-[13px] font-semibold ${
+                      n.read_at ? "text-sys-ink-2" : "text-sys-ink"
                     }`}
                   >
                     {n.title}
                   </p>
-                  <p className="text-xs text-zinc-500 dark:text-zinc-500 mt-0.5 line-clamp-2">{n.body}</p>
-                  <p className="text-[10px] text-zinc-400 mt-1">{timeAgo(n.created_at)}</p>
+                  <p className="mt-0.5 line-clamp-2 text-[13px] text-sys-ink-3">{n.body}</p>
+                  <p className="mt-1.5">
+                    <span className="sys-rotulo text-sys-ink-3">{timeAgo(n.created_at)}</span>
+                  </p>
                 </div>
               </div>
             ))}

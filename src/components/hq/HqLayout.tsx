@@ -1,12 +1,13 @@
 import { Navigate, Outlet, NavLink, Link, useNavigate, useLocation } from "react-router-dom";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useAuth } from "@/hooks/data/useAuth";
-import { Loader2, LogOut, LayoutDashboard, Briefcase, Users, Search, Settings, Sun, Moon, UserCircle, Plus, UserPlus, ArrowRight, Command, Rss, CalendarDays, BarChart3, Gauge, Contact, KanbanSquare, ListChecks, SlidersHorizontal, BookOpen } from "lucide-react";
+import { Loader2, LogOut, LayoutDashboard, Briefcase, Users, Search, Settings, Sun, Moon, UserCircle, Plus, UserPlus, ArrowRight, Command, Rss, CalendarDays, BarChart3, Gauge, Contact, KanbanSquare, ListChecks, SlidersHorizontal, BookOpen, X } from "lucide-react";
 import { useTheme } from "@/components/layout/ThemeProvider";
 import NotificationBell from "@/components/layout/NotificationBell";
 import VerticeLogo from "@/components/layout/VerticeLogo";
 import FloatingChat from "@/components/chat/FloatingChat";
 import MobileTabBar from "@/components/layout/MobileTabBar";
+import { Iniciais, Rotulo } from "@/components/sistema";
 import { LightboxProvider } from "@/components/hq/thevertice/shared";
 import { CrmCompanyProvider } from "@/hooks/data/useCrmCompany";
 import CompanySwitcher from "@/components/hq/crm/CompanySwitcher";
@@ -89,32 +90,35 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
   const categories = [...new Set(results.map(c => c.category))];
 
   return (
-    <div className="absolute right-0 top-12 w-96 bg-white dark:bg-navy-light border border-zinc-200 dark:border-white/10 rounded-2xl shadow-2xl z-50 overflow-hidden">
-      <div className="flex items-center gap-3 px-4 py-3 border-b border-zinc-100 dark:border-white/5">
-        <Search className="w-4 h-4 text-zinc-400 shrink-0" />
+    // Sombra e superfície elevada são legítimas aqui: há empilhamento real.
+    <div className="absolute right-0 top-12 z-50 w-96 overflow-hidden rounded-sys border border-sys-rule-strong bg-sys-raised shadow-sys">
+      <div className="flex items-center gap-3 border-b border-sys-rule px-4 py-3">
+        <Search className="h-4 w-4 shrink-0 text-sys-ink-3" />
         <input
           ref={inputRef}
           value={query}
           onChange={e => setQuery(e.target.value)}
           onKeyDown={handleKey}
           placeholder="Buscar ou digitar um comando..."
-          className="flex-1 bg-transparent text-sm text-navy dark:text-white placeholder:text-zinc-400 outline-none"
+          className="flex-1 bg-transparent text-[13px] text-sys-ink outline-none placeholder:text-sys-ink-3"
         />
         {query && (
-          <button onClick={() => setQuery("")} className="text-zinc-400 hover:text-zinc-600 dark:hover:text-white">
-            <span className="text-xs">✕</span>
+          <button onClick={() => setQuery("")} aria-label="Limpar busca" className="text-sys-ink-3 transition-colors hover:text-sys-ink">
+            <X size={14} />
           </button>
         )}
-        <kbd className="hidden sm:flex items-center gap-1 text-[10px] text-zinc-400 bg-zinc-100 dark:bg-white/5 px-1.5 py-0.5 rounded font-mono">ESC</kbd>
+        <kbd className="sys-rotulo hidden shrink-0 rounded-sys border border-sys-rule px-1.5 py-1 text-sys-ink-3 sm:block">ESC</kbd>
       </div>
 
       <div className="max-h-80 overflow-y-auto py-2">
         {results.length === 0 && (
-          <p className="text-xs text-zinc-400 text-center py-6">Nenhum resultado para "{query}"</p>
+          <p className="py-6 text-center text-[13px] text-sys-ink-3">Nenhum resultado para "{query}"</p>
         )}
         {categories.map(cat => (
           <div key={cat}>
-            <p className="px-4 pt-2 pb-1 text-[10px] font-bold tracking-widest text-zinc-400 dark:text-zinc-500">{cat.toUpperCase()}</p>
+            <p className="px-4 pb-1.5 pt-3">
+              <Rotulo>{cat}</Rotulo>
+            </p>
             {results.filter(c => c.category === cat).map(cmd => {
               const idx = results.indexOf(cmd);
               const Icon = cmd.icon;
@@ -124,22 +128,26 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
                   key={cmd.id}
                   onClick={() => execute(cmd)}
                   onMouseEnter={() => setActiveIdx(idx)}
-                  className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors text-left ${
-                    isActive ? "bg-blue-50 dark:bg-blue-500/10" : "hover:bg-zinc-50 dark:hover:bg-white/5"
+                  className={`relative flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors duration-150 ${
+                    isActive ? "bg-sys-accent/[0.08]" : "hover:bg-sys-ink/[0.04]"
                   }`}
                 >
-                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
-                    isActive ? "bg-blue-600 text-white" : "bg-zinc-100 dark:bg-white/5 text-zinc-500 dark:text-zinc-400"
+                  {/* Cota de seleção: uma régua na margem, no lugar do preenchimento azul. */}
+                  <span className={`absolute inset-y-0 left-0 w-[2px] bg-sys-accent transition-opacity duration-150 ${isActive ? "opacity-100" : "opacity-0"}`} />
+                  <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-sys border transition-colors duration-150 ${
+                    isActive
+                      ? "border-sys-accent/40 bg-sys-accent/10 text-sys-accent"
+                      : "border-sys-rule text-sys-ink-3"
                   }`}>
                     <Icon size={15} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className={`text-sm font-semibold truncate ${isActive ? "text-blue-600 dark:text-blue-400" : "text-navy dark:text-white"}`}>
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className={`block truncate text-[13px] font-semibold ${isActive ? "text-sys-accent" : "text-sys-ink"}`}>
                       {cmd.label}
-                    </p>
-                    <p className="text-xs text-zinc-500 dark:text-zinc-400 truncate">{cmd.desc}</p>
-                  </div>
-                  <ArrowRight size={13} className={`shrink-0 transition-opacity ${isActive ? "opacity-100 text-blue-500" : "opacity-0"}`} />
+                    </span>
+                    <span className="block truncate text-[13px] text-sys-ink-3">{cmd.desc}</span>
+                  </span>
+                  <ArrowRight size={13} className={`shrink-0 text-sys-accent transition-opacity duration-150 ${isActive ? "opacity-100" : "opacity-0"}`} />
                 </button>
               );
             })}
@@ -147,10 +155,10 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
         ))}
       </div>
 
-      <div className="px-4 py-2 border-t border-zinc-100 dark:border-white/5 flex gap-4 text-[10px] text-zinc-400">
-        <span className="flex items-center gap-1"><kbd className="bg-zinc-100 dark:bg-white/5 px-1 rounded font-mono">↑↓</kbd> navegar</span>
-        <span className="flex items-center gap-1"><kbd className="bg-zinc-100 dark:bg-white/5 px-1 rounded font-mono">↵</kbd> executar</span>
-        <span className="flex items-center gap-1"><kbd className="bg-zinc-100 dark:bg-white/5 px-1 rounded font-mono">ESC</kbd> fechar</span>
+      <div className="flex gap-4 border-t border-sys-rule px-4 py-2">
+        <Rotulo>↑↓ navegar</Rotulo>
+        <Rotulo>↵ executar</Rotulo>
+        <Rotulo>ESC fechar</Rotulo>
       </div>
     </div>
   );
@@ -182,11 +190,9 @@ export default function HqLayout() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-zinc-50 dark:bg-[#0A0A0A] flex flex-col items-center justify-center transition-colors">
-        <Loader2 className="w-8 h-8 text-primary dark:text-accent animate-spin mb-4" />
-        <p className="text-zinc-500 font-mono text-sm tracking-widest animate-pulse">
-          INICIANDO SESSÃO HQ...
-        </p>
+      <div className="sys flex min-h-screen flex-col items-center justify-center bg-sys-paper">
+        <Loader2 className="mb-4 h-6 w-6 animate-spin text-sys-accent" />
+        <Rotulo>Iniciando sessão QG</Rotulo>
       </div>
     );
   }
@@ -202,129 +208,134 @@ export default function HqLayout() {
 
   return (
     <CrmCompanyProvider>
-    <div className="min-h-screen bg-[#F8FAFC] dark:bg-navy-dark text-navy dark:text-white flex transition-colors duration-300 font-sans">
+    <div className="sys sys-prancha flex min-h-screen font-sans text-sys-ink">
 
-      {/* Sidebar - Reference Image Style */}
-      <aside className="hidden lg:flex lg:w-[260px] bg-white dark:bg-navy-light/60 flex-col h-screen sticky top-0 z-40 transition-all duration-300 border-r border-transparent dark:border-white/5 shadow-[2px_0_10px_rgba(0,0,0,0.02)]">
-        
-        {/* Logo */}
-        <div className="h-24 flex items-center justify-center lg:justify-start lg:px-8">
-          <VerticeLogo className="w-9 h-9 shrink-0" />
-          <span className="hidden lg:block ml-3 font-bold text-xl tracking-tight text-navy dark:text-white">
-            VEBRAM QG
-          </span>
+      {/* Sidebar — carimbo da prancha: separada por uma régua, não por sombra. */}
+      <aside className="sticky top-0 z-40 hidden h-screen flex-col border-r border-sys-rule bg-sys-paper lg:flex lg:w-[260px]">
+
+        <div className="flex h-24 items-center border-b border-sys-rule px-6">
+          <VerticeLogo className="h-8 w-8 shrink-0" />
+          <div className="ml-3 min-w-0">
+            <p className="font-sans text-[15px] font-extrabold uppercase leading-none tracking-tight text-sys-ink">
+              Vebram
+            </p>
+            <p className="mt-1">
+              <Rotulo>Quartel-general</Rotulo>
+            </p>
+          </div>
         </div>
 
-        {/* Navigation */}
-        <nav className="flex-1 py-4 flex flex-col gap-2 px-4 overflow-y-auto min-h-0 scrollbar-none">
-          <p className="hidden lg:block text-xs font-bold text-zinc-400 mb-2 px-4">MAIN MENU</p>
-          <NavItem icon={<LayoutDashboard size={20} />} label="Dashboard" to="/hq" end />
-          <NavItem icon={<Briefcase size={20} />} label="Projetos" to="/hq/projects" />
-          <NavItem icon={<Users size={20} />} label="Clientes" to="/hq/clients" />
+        <nav className="scrollbar-none flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto px-3 py-5">
+          <GrupoNav n="01" titulo="Menu principal" />
+          <NavItem icon={<LayoutDashboard size={17} />} label="Dashboard" to="/hq" end />
+          <NavItem icon={<Briefcase size={17} />} label="Projetos" to="/hq/projects" />
+          <NavItem icon={<Users size={17} />} label="Clientes" to="/hq/clients" />
 
-          <p className="hidden lg:block text-xs font-bold text-zinc-400 mb-2 mt-4 px-4">VEBRAM</p>
-          <NavItem icon={<Rss size={20} />} label="Mural" to="/hq/feed" />
-          <NavItem icon={<CalendarDays size={20} />} label="Calendário" to="/hq/calendar" />
-          <NavItem icon={<BarChart3 size={20} />} label="Enquetes" to="/hq/polls" />
-          <NavItem icon={<Users size={20} />} label="Membros" to="/hq/members" />
+          <GrupoNav n="02" titulo="Vebram" />
+          <NavItem icon={<Rss size={17} />} label="Mural" to="/hq/feed" />
+          <NavItem icon={<CalendarDays size={17} />} label="Calendário" to="/hq/calendar" />
+          <NavItem icon={<BarChart3 size={17} />} label="Enquetes" to="/hq/polls" />
+          <NavItem icon={<Users size={17} />} label="Membros" to="/hq/members" />
 
-          <p className="hidden lg:block text-xs font-bold text-zinc-400 mb-2 mt-4 px-4">CRM</p>
-          <NavItem icon={<Gauge size={20} />} label="Painel CRM" to="/hq/crm" end />
-          <NavItem icon={<Contact size={20} />} label="Leads" to="/hq/crm/leads" />
-          <NavItem icon={<KanbanSquare size={20} />} label="Pipeline" to="/hq/crm/pipeline" />
-          <NavItem icon={<ListChecks size={20} />} label="Tarefas" to="/hq/crm/tasks" />
-          <NavItem icon={<SlidersHorizontal size={20} />} label="Config" to="/hq/crm/settings" />
+          <GrupoNav n="03" titulo="CRM" />
+          <NavItem icon={<Gauge size={17} />} label="Painel CRM" to="/hq/crm" end />
+          <NavItem icon={<Contact size={17} />} label="Leads" to="/hq/crm/leads" />
+          <NavItem icon={<KanbanSquare size={17} />} label="Pipeline" to="/hq/crm/pipeline" />
+          <NavItem icon={<ListChecks size={17} />} label="Tarefas" to="/hq/crm/tasks" />
+          <NavItem icon={<SlidersHorizontal size={17} />} label="Config" to="/hq/crm/settings" />
         </nav>
 
-        {/* Bottom Section */}
-        <div className="mt-auto flex flex-col gap-4 p-4">
-          {/* Theme Toggle - Pill Style */}
-          <div className="flex items-center justify-center lg:justify-start">
-            <button 
-              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              className="relative w-14 h-8 rounded-full bg-zinc-100 dark:bg-black/40 border border-zinc-200 dark:border-white/10 transition-colors duration-300 focus:outline-none flex items-center"
-              aria-label="Toggle Theme"
-            >
-              <div 
-                className={`absolute w-6 h-6 rounded-full flex items-center justify-center transition-transform duration-300 shadow-sm ${
-                  theme === "dark" 
-                    ? "translate-x-7 bg-navy-light text-white" 
-                    : "translate-x-1 bg-white text-navy border border-zinc-200"
+        {/* Chave de tema — interruptor reto, com a posição legível de longe. */}
+        <div className="mt-auto border-t border-sys-rule p-3">
+          <button
+            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+            className="group flex w-full items-center gap-3 rounded-sys px-3 py-2.5 transition-colors duration-150 hover:bg-sys-ink/[0.05]"
+            aria-label={`Alternar para tema ${theme === "dark" ? "claro" : "escuro"}`}
+          >
+            <span className="relative flex h-6 w-11 shrink-0 items-center rounded-sys border border-sys-rule-strong bg-sys-ink/[0.04]">
+              <span
+                className={`absolute flex h-[18px] w-[18px] items-center justify-center bg-sys-accent text-white transition-transform duration-150 ease-out ${
+                  theme === "dark" ? "translate-x-[22px]" : "translate-x-[2px]"
                 }`}
               >
-                {theme === "dark" ? <Moon size={14} /> : <Sun size={14} />}
-              </div>
-            </button>
-            <span className="hidden lg:block ml-3 text-sm font-medium text-zinc-500">
-              Tema {theme === "dark" ? "Escuro" : "Claro"}
+                {theme === "dark" ? <Moon size={11} /> : <Sun size={11} />}
+              </span>
             </span>
-          </div>
+            <Rotulo className="text-sys-ink-2">Tema {theme === "dark" ? "escuro" : "claro"}</Rotulo>
+          </button>
         </div>
       </aside>
 
-      {/* Main Content Area */}
-      <main className="flex-1 overflow-y-auto flex flex-col">
-        
-        {/* Top Header */}
-        <header className="h-14 px-3 lg:h-24 lg:px-8 flex items-center justify-between sticky top-0 bg-[#F8FAFC]/80 dark:bg-navy-dark/80 backdrop-blur-md z-30">
-          <div className="flex items-center gap-4 min-w-0">
-            <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-full bg-zinc-200 dark:bg-white/10 flex items-center justify-center overflow-hidden">
-               <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${session.user.email}`} alt="Avatar" className="w-full h-full object-cover" />
-            </div>
+      {/* Área de conteúdo */}
+      <main className="flex flex-1 flex-col overflow-y-auto">
+
+        {/* Carimbo superior */}
+        <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-sys-rule bg-sys-paper/90 px-3 backdrop-blur-md lg:h-24 lg:px-8">
+          <div className="flex min-w-0 items-center gap-3">
+            <Iniciais nome={displayName} className="h-9 w-9 lg:h-10 lg:w-10" />
             <div className="min-w-0">
-              <h2 className="text-sm font-bold text-navy dark:text-white leading-tight truncate">Olá, {displayName}</h2>
-              <p className="hidden lg:block text-xs text-zinc-500">{new Date().toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+              <h2 className="truncate font-sans text-[13px] font-extrabold uppercase leading-tight tracking-tight text-sys-ink">
+                {displayName}
+              </h2>
+              <p className="hidden lg:block">
+                <Rotulo>
+                  {new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long", year: "numeric" })}
+                </Rotulo>
+              </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 lg:gap-3">
             {location.pathname.startsWith("/hq/crm") && (
               <>
                 <CompanySwitcher />
                 <button
                   onClick={() => setShowGuide(true)}
-                  className="flex items-center gap-1.5 px-3 py-2 bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 rounded-full text-xs font-bold text-blue-600 dark:text-blue-400 hover:bg-blue-100/50 dark:hover:bg-blue-500/20 transition-all shadow-sm shrink-0"
+                  className="flex shrink-0 items-center gap-1.5 rounded-sys border border-sys-rule-strong px-3 py-2 text-sys-ink-2 transition-colors duration-150 hover:bg-sys-ink/[0.05] hover:text-sys-ink"
                 >
                   <BookOpen size={13} />
-                  <span className="hidden sm:inline">Guia do CRM</span>
+                  <Rotulo className="hidden text-inherit sm:inline">Guia do CRM</Rotulo>
                 </button>
               </>
             )}
-            {/* Command Palette trigger */}
-            <div ref={paletteRef} className="hidden md:block relative">
+
+            {/* Gatilho do command palette */}
+            <div ref={paletteRef} className="relative hidden md:block">
               <button
                 onClick={() => setShowPalette(v => !v)}
-                className="flex items-center gap-2.5 w-64 bg-white dark:bg-navy-light/40 border border-zinc-200 dark:border-white/10 rounded-full pl-3.5 pr-3 py-2 text-sm text-zinc-400 hover:border-blue-400 dark:hover:border-blue-500/50 transition-colors shadow-sm group"
+                className="flex w-64 items-center gap-2.5 rounded-sys border border-sys-rule-strong px-3 py-2.5 text-left transition-colors duration-150 hover:border-sys-accent"
               >
-                <Search className="w-4 h-4 shrink-0" />
-                <span className="flex-1 text-left text-sm">Buscar projetos, clientes...</span>
-                <kbd className="flex items-center gap-0.5 text-[10px] bg-zinc-100 dark:bg-white/5 px-1.5 py-0.5 rounded font-mono text-zinc-400">
+                <Search className="h-4 w-4 shrink-0 text-sys-ink-3" />
+                <span className="flex-1 truncate text-[13px] text-sys-ink-3">Buscar projetos, clientes...</span>
+                <kbd className="sys-rotulo flex shrink-0 items-center gap-0.5 rounded-sys border border-sys-rule px-1.5 py-0.5 text-sys-ink-3">
                   <Command size={9} />K
                 </kbd>
               </button>
               {showPalette && <CommandPalette onClose={() => setShowPalette(false)} />}
             </div>
 
-            {/* Bell / Notificações */}
             <NotificationBell align="right" />
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="w-9 h-9 lg:w-10 lg:h-10 bg-white dark:bg-navy-light/40 border border-zinc-200 dark:border-white/10 rounded-full flex items-center justify-center text-zinc-500 hover:text-navy dark:hover:text-white transition-colors shadow-sm">
-                  <Settings size={18} />
+                <button
+                  aria-label="Configurações da conta"
+                  className="flex h-10 w-10 items-center justify-center rounded-sys border border-sys-rule-strong text-sys-ink-2 transition-colors duration-150 hover:bg-sys-ink/[0.05] hover:text-sys-ink"
+                >
+                  <Settings size={17} />
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56 bg-white dark:bg-navy border-zinc-200 dark:border-white/10 text-navy dark:text-white rounded-xl shadow-2xl">
-                <DropdownMenuLabel className="font-mono text-xs text-zinc-500">Minha Conta</DropdownMenuLabel>
-                <DropdownMenuSeparator className="bg-zinc-200 dark:bg-white/10" />
-                <DropdownMenuItem asChild className="cursor-pointer hover:bg-black/5 dark:hover:bg-white/10">
+              <DropdownMenuContent align="end" className="w-56 rounded-sys border-sys-rule-strong bg-sys-raised text-sys-ink shadow-sys">
+                <DropdownMenuLabel className="sys-rotulo text-sys-ink-3">Minha conta</DropdownMenuLabel>
+                <DropdownMenuSeparator className="bg-sys-rule" />
+                <DropdownMenuItem asChild className="cursor-pointer rounded-sys text-[13px] focus:bg-sys-ink/[0.05]">
                   <Link to="/hq/profile">
                     <UserCircle className="mr-2 h-4 w-4" />
-                    <span>Meu Perfil</span>
+                    <span>Meu perfil</span>
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuSeparator className="bg-zinc-200 dark:bg-white/10" />
-                <DropdownMenuItem onClick={signOut} className="cursor-pointer text-red-500 dark:text-red-400 hover:bg-red-500/10">
+                <DropdownMenuSeparator className="bg-sys-rule" />
+                <DropdownMenuItem onClick={signOut} className="cursor-pointer rounded-sys text-[13px] text-sys-danger focus:bg-sys-danger/[0.08] focus:text-sys-danger">
                   <LogOut className="mr-2 h-4 w-4" />
                   <span>Sair do sistema</span>
                 </DropdownMenuItem>
@@ -333,8 +344,7 @@ export default function HqLayout() {
           </div>
         </header>
 
-        {/* Page Content */}
-        <div className="px-3 py-4 pb-24 lg:p-8 flex-1">
+        <div className="flex-1 px-3 py-5 pb-24 lg:p-8">
           <LightboxProvider>
             <Outlet />
           </LightboxProvider>
@@ -343,11 +353,11 @@ export default function HqLayout() {
 
       <MobileTabBar
         tabs={[
-          { icon: <LayoutDashboard size={20} />, label: "Painel", to: "/hq", end: true },
-          { icon: <Rss size={20} />, label: "Mural", to: "/hq/feed" },
-          { icon: <CalendarDays size={20} />, label: "Agenda", to: "/hq/calendar" },
-          { icon: <BarChart3 size={20} />, label: "Enquetes", to: "/hq/polls" },
-          { icon: <Gauge size={20} />, label: "CRM", to: "/hq/crm", end: true },
+          { icon: <LayoutDashboard size={19} />, label: "Painel", to: "/hq", end: true },
+          { icon: <Rss size={19} />, label: "Mural", to: "/hq/feed" },
+          { icon: <CalendarDays size={19} />, label: "Agenda", to: "/hq/calendar" },
+          { icon: <BarChart3 size={19} />, label: "Enquetes", to: "/hq/polls" },
+          { icon: <Gauge size={19} />, label: "CRM", to: "/hq/crm", end: true },
         ]}
       />
 
@@ -358,25 +368,39 @@ export default function HqLayout() {
   );
 }
 
+/** Cabeçalho de grupo da navegação — numerado, como as pranchas de um caderno. */
+function GrupoNav({ n, titulo }: { n: string; titulo: string }) {
+  return (
+    <p className="mb-2 mt-5 flex items-baseline gap-2 border-b border-sys-rule px-3 pb-1.5 first:mt-0">
+      <Rotulo>{n} /</Rotulo>
+      <Rotulo className="text-sys-ink-2">{titulo}</Rotulo>
+    </p>
+  );
+}
+
 function NavItem({ icon, label, to, end }: { icon: React.ReactNode; label: string; to: string; end?: boolean }) {
   return (
     <NavLink
       to={to}
       end={end}
       className={({ isActive }) =>
-        `w-full flex items-center justify-center lg:justify-start p-3 lg:px-4 rounded-xl transition-all duration-200 group ${
+        `group relative flex w-full items-center gap-3 rounded-sys py-2.5 pl-4 pr-3 transition-colors duration-150 ${
           isActive
-            ? "bg-blue-600 text-white font-bold shadow-lg shadow-blue-500/30"
-            : "text-zinc-500 dark:text-zinc-400 hover:text-navy dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/5"
+            ? "bg-sys-accent/[0.10] text-sys-ink"
+            : "text-sys-ink-2 hover:bg-sys-ink/[0.05] hover:text-sys-ink"
         }`
       }
     >
       {({ isActive }) => (
         <>
-          <div className={`${isActive ? "text-white" : ""}`}>
-            {icon}
-          </div>
-          <span className="hidden lg:block ml-3 text-sm font-medium">{label}</span>
+          {/* A marcação do item ativo é uma cota na margem — não uma pílula azul. */}
+          <span
+            className={`absolute inset-y-1 left-0 w-[2px] bg-sys-accent transition-opacity duration-150 ${
+              isActive ? "opacity-100" : "opacity-0"
+            }`}
+          />
+          <span className={isActive ? "text-sys-accent" : ""}>{icon}</span>
+          <span className={`text-[13px] ${isActive ? "font-semibold" : "font-medium"}`}>{label}</span>
         </>
       )}
     </NavLink>

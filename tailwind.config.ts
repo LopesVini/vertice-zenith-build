@@ -62,11 +62,36 @@ export default {
           DEFAULT: "hsl(var(--surface))",
           elevated: "hsl(var(--surface-elevated))",
         },
+        /* ── Sistema (QG + Portal): linguagem "Prancha Técnica" ──────────────
+           Definidos em src/styles/sistema.css sob a classe `.sys`, então só
+           valem dentro dos layouts logados. Canais RGB para que `/opacidade`
+           funcione (ex.: `bg-sys-accent/10`). Nada acima foi alterado — o site
+           institucional continua exatamente como estava. */
+        sys: {
+          paper: "rgb(var(--sys-paper) / <alpha-value>)",
+          raised: "rgb(var(--sys-raised) / <alpha-value>)",
+          ink: "rgb(var(--sys-ink) / <alpha-value>)",
+          "ink-2": "rgb(var(--sys-ink-2) / <alpha-value>)",
+          "ink-3": "rgb(var(--sys-ink-3) / <alpha-value>)",
+          rule: "rgb(var(--sys-rule) / <alpha-value>)",
+          "rule-strong": "rgb(var(--sys-rule-strong) / <alpha-value>)",
+          accent: "rgb(var(--sys-accent) / <alpha-value>)",
+          ochre: "rgb(var(--sys-ochre) / <alpha-value>)",
+          danger: "rgb(var(--sys-danger) / <alpha-value>)",
+          ok: "rgb(var(--sys-ok) / <alpha-value>)",
+        },
       },
       borderRadius: {
         lg: "2rem",
         md: "1.5rem",
         sm: "1rem",
+        sys: "var(--sys-radius)",
+      },
+      boxShadow: {
+        sys: "var(--sys-shadow)",
+      },
+      letterSpacing: {
+        tecnico: "0.18em",
       },
       keyframes: {
         "accordion-down": {

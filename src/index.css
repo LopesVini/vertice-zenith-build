@@ -1,4 +1,13 @@
+/* Plus Jakarta Sans (corpo/títulos), JetBrains Mono (rótulos técnicos, `font-mono`)
+   e Playfair Display (o italic dramático, `font-drama`). As três já estavam
+   declaradas em tailwind.config.ts, mas só a Jakarta era importada — ou seja,
+   todo `font-mono` e `font-drama` do app vinha renderizando em fallback do SO. */
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@1,400;1,500;1,600&display=swap');
+
+/* Linguagem visual do sistema logado (QG + Portal), escopada em `.sys`. */
+@import "./styles/sistema.css";
 
 @tailwind base;
 @tailwind components;

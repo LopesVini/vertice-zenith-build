@@ -1,0 +1,127 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   Linguagem visual do SISTEMA (QG admin + Portal do cliente): "Prancha Técnica".
+   ─────────────────────────────────────────────────────────────────────────────
+
+   Escopo proposital: tudo aqui vive sob a classe `.sys`, aplicada só na raiz do
+   HqLayout, do PortalLayout e do login. O site institucional continua usando os
+   tokens de `index.css` e NÃO é afetado por nada deste arquivo.
+
+   Os canais são RGB separados por espaço para que os modificadores de opacidade
+   do Tailwind funcionem: `bg-sys-accent/10`, `border-sys-rule/60` etc.
+
+   Contraste: todos os pares de tinta sobre papel foram verificados em >= 4.5:1
+   nos dois temas (a tinta terciária é usada em rótulos de 10-11px, então também
+   precisa passar como texto pequeno — por isso ela é mais escura/clara do que a
+   intuição sugere).                                                            */
+
+.sys {
+  /* Papel e superfície */
+  --sys-paper: 250 250 247;         /* #FAFAF7 — papel quente, nunca branco puro */
+  --sys-raised: 255 255 255;        /* #FFFFFF — só onde há empilhamento real    */
+
+  /* Tinta */
+  --sys-ink: 15 27 45;              /* #0F1B2D  16.5:1 */
+  --sys-ink-2: 86 97 111;           /* #56616F   6.1:1 */
+  --sys-ink-3: 101 111 124;         /* #656F7C   4.9:1 — rótulos mono            */
+
+  /* Réguas */
+  --sys-rule: 216 217 210;          /* #D8D9D2 — hairline padrão                 */
+  --sys-rule-strong: 169 171 162;   /* #A9ABA2 — divisor de seção                */
+
+  /* Marca */
+  --sys-accent: 27 95 138;          /* #1B5F8A — o azul que já vive no logo      */
+  --sys-ochre: 150 96 31;           /* #96601F — SINAL: pendência, atraso        */
+
+  /* Semânticas */
+  --sys-danger: 163 47 47;          /* #A32F2F — tijolo, não vermelho de alerta  */
+  --sys-ok: 47 107 79;              /* #2F6B4F */
+
+  /* Forma */
+  --sys-radius: 2px;
+  --sys-shadow: 0 8px 24px rgb(11 20 32 / 0.14);
+}
+
+.dark .sys {
+  --sys-paper: 11 20 32;            /* #0B1420 */
+  --sys-raised: 16 28 43;           /* #101C2B */
+
+  --sys-ink: 237 239 242;           /* #EDEFF2 */
+  --sys-ink-2: 151 163 178;         /* #97A3B2  7.2:1 */
+  --sys-ink-3: 116 134 156;         /* #74869C  4.9:1 */
+
+  --sys-rule: 38 50 64;             /* #263240 */
+  --sys-rule-strong: 78 94 114;     /* #4E5E72 */
+
+  --sys-accent: 75 159 213;         /* #4B9FD5  6.3:1 */
+  --sys-ochre: 217 164 65;          /* #D9A441  8.2:1 */
+
+  --sys-danger: 224 115 107;        /* #E0736B */
+  --sys-ok: 95 169 129;             /* #5FA981 */
+
+  --sys-shadow: 0 8px 24px rgb(0 0 0 / 0.45);
+}
+
+@layer components {
+  /* Grade milimetrada de prancha. Estática e de custo zero — é só um gradiente
+     repetido no fundo, não um elemento. Desligada abaixo de lg: em tela pequena
+     ela só suja o contraste do texto. */
+  .sys-prancha {
+    background-color: rgb(var(--sys-paper));
+  }
+
+  @media (min-width: 1024px) {
+    .sys-prancha {
+      background-image:
+        repeating-linear-gradient(
+          to right,
+          rgb(var(--sys-ink) / 0.035) 0 1px,
+          transparent 1px 48px
+        ),
+        repeating-linear-gradient(
+          to bottom,
+          rgb(var(--sys-ink) / 0.035) 0 1px,
+          transparent 1px 48px
+        );
+    }
+  }
+
+  /* Rótulo mono em caixa alta — o tom de voz técnico da prancha. */
+  .sys-rotulo {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: 10px;
+    line-height: 1;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+
+  /* Foco visível e reto, coerente com o resto: nunca removemos o anel. */
+  .sys-foco {
+    outline: 2px solid rgb(var(--sys-accent));
+    outline-offset: 2px;
+  }
+}
+
+@layer base {
+  /* O anel de foco padrão de todo elemento interativo dentro do sistema. */
+  .sys :focus-visible {
+    outline: 2px solid rgb(var(--sys-accent));
+    outline-offset: 2px;
+  }
+
+  /* Números de dado nunca dançam ao atualizar. */
+  .sys [data-dado] {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* Movimento: 120-180ms, ease-out, só opacity/transform. Quem pediu menos
+   movimento recebe menos movimento. */
+@media (prefers-reduced-motion: reduce) {
+  .sys *,
+  .sys *::before,
+  .sys *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
