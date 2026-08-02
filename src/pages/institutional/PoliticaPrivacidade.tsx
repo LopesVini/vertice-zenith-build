@@ -77,8 +77,8 @@ const PoliticaPrivacidade = () => {
               <p>
                 Para exercer qualquer um desses direitos ou tirar dúvidas sobre esta política,
                 fale conosco em{" "}
-                <a href="mailto:verticeprojetos7@gmail.com" className="text-accent hover:underline">
-                  verticeprojetos7@gmail.com
+                <a href="mailto:vebramprojetos@gmail.com" className="text-accent hover:underline">
+                  vebramprojetos@gmail.com
                 </a>.
               </p>
             </section>

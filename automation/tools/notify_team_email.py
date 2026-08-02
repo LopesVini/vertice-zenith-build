@@ -2,10 +2,10 @@ import os
 import datetime
 from tools.utils import log_error, send_email_api
 
-EMAIL_DESTINATARIO = os.getenv("EMAIL_DESTINATARIO", "").strip()
+EMAIL_DESTINATARIO = (os.getenv("EMAIL_DESTINATARIO") or "vebramprojetos@gmail.com").strip()
 
 
-def notify_team_email(record: dict):
+def notify_team_email(record: dict, email_body: str = None):
     nome = record.get("nome", "")
     tipo = record.get("tipo", "")
     email = record.get("email", "")
@@ -15,7 +15,7 @@ def notify_team_email(record: dict):
     fase = record.get("fase", "")
     mensagem = record.get("mensagem") or "nenhuma"
 
-    subject = f"Novo orçamento: {nome} ({tipo})"
+    subject = f"🔔 Novo orçamento: {nome} ({tipo})"
 
     body = f"""Novo pedido de orçamento recebido via site.
 
@@ -27,10 +27,12 @@ Tipo:     {tipo}
 Área:     {area}
 Fase:     {fase}
 Mensagem: {mensagem}
-
----
-Vertice Automação · {datetime.datetime.now().strftime("%d/%m/%Y %H:%M")}
 """
+
+    if email_body:
+        body += f"\n---\nResposta automática enviada ao cliente pela IA:\n\n{email_body}\n"
+
+    body += f"\n---\nVertice Automação · {datetime.datetime.now().strftime('%d/%m/%Y %H:%M')}\n"
 
     html = body.replace("\n", "<br>")
 

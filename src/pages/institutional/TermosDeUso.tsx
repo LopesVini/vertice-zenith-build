@@ -70,8 +70,8 @@ const TermosDeUso = () => {
               <p>
                 Estes termos são regidos pela legislação brasileira. Dúvidas podem ser
                 encaminhadas para{" "}
-                <a href="mailto:verticeprojetos7@gmail.com" className="text-accent hover:underline">
-                  verticeprojetos7@gmail.com
+                <a href="mailto:vebramprojetos@gmail.com" className="text-accent hover:underline">
+                  vebramprojetos@gmail.com
                 </a>.
               </p>
             </section>

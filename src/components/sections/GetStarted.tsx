@@ -41,23 +41,31 @@ const GetStarted = () => {
     const cidade = formData.get("cidade") as string;
     const tipo = selectedTypes.join(", ");
 
+    const record = { nome, email, celular, cidade, tipo, mensagem: message };
+
     // 1. Fire and forget no Supabase (não trava a tela esperando)
     Promise.resolve(
-      supabase.from("Orçamentos").insert({
-        nome,
-        email,
-        celular,
-        cidade,
-        tipo,
-        mensagem: message,
-      })
+      supabase.from("Orçamentos").insert(record)
     )
       .then(({ error: dbError }) => {
         if (dbError) console.error("Aviso: Falha ao salvar no banco (Supabase):", dbError);
       })
       .catch((err) => console.error("Erro Supabase:", err));
 
-    // 2. Insert acima dispara o webhook Supabase -> Render (/webhook/supabase), que roda o pipeline de automação.
+    // 2. Insert acima dispara o webhook Supabase -> Render (/webhook/supabase).
+    // Chamada direta de backup ao serviço de automação se a variável VITE_AUTOMATION_URL estiver presente:
+    const autoUrl = import.meta.env.VITE_AUTOMATION_URL;
+    const autoKey = import.meta.env.VITE_AUTOMATION_KEY;
+    if (autoUrl) {
+      fetch(`${autoUrl}/process-quote`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": autoKey || "",
+        },
+        body: JSON.stringify(record),
+      }).catch((err) => console.error("Erro na automação:", err));
+    }
 
     // 3. Libera instantaneamente a tela de sucesso!
     setTimeout(() => {

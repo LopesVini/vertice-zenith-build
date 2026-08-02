@@ -12,8 +12,8 @@ const Footer = () => {
               Engenharia residencial completa e integrada. Projetos arquitetônicos, elétricos, hidrossanitários e estruturais para a Região Metropolitana de Belo Horizonte.
             </p>
             <div className="text-white/40 font-mono mt-6 flex flex-col gap-3">
-              <a href="mailto:verticeprojetos7@gmail.com" className="hover:text-accent transition-colors text-xs flex items-center gap-2">
-                <Mail size={14} /> verticeprojetos7@gmail.com
+              <a href="mailto:vebramprojetos@gmail.com" className="hover:text-accent transition-colors text-xs flex items-center gap-2">
+                <Mail size={14} /> vebramprojetos@gmail.com
               </a>
               <a href="tel:31985981606" className="hover:text-accent transition-colors text-xs flex items-center gap-2">
                 <Phone size={14} /> (31) 98598-1606

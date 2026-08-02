@@ -9,7 +9,7 @@ Enviar e-mail interno para o responsável com resumo completo do lead recebido.
 ## Lógica
 1. Montar e-mail plain text com todos os campos formatados
 2. Assunto: `🔔 Novo orçamento: {nome} ({tipo})`
-3. Remetente: verticeprojetos7@gmail.com
+3. Remetente / Destinatário Padrão: vebramprojetos@gmail.com
 4. Destinatário: EMAIL_DESTINATARIO (definido no .env)
 5. Enviar via SMTP SSL
 

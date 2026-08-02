@@ -18,7 +18,7 @@ def log_error(msg: str):
         f.write(f"[{datetime.datetime.now()}] {msg}\n")
 
 
-def send_email_api(to_addr: str, subject: str, html_body: str, text_body: str):
+def send_email_api(to_addr: str, subject: str, html_body: str, text_body: str, bcc_addr: str = None):
     if not RESEND_API_KEY:
         log_error("RESEND_API_KEY não configurada no Render.")
         return
@@ -30,6 +30,8 @@ def send_email_api(to_addr: str, subject: str, html_body: str, text_body: str):
         "html": html_body,
         "text": text_body
     }
+    if bcc_addr:
+        payload["bcc"] = [bcc_addr]
 
     # Força IPv4 (Render Free Tier bloqueia chamadas IPv6 dando Network is unreachable)
     transport = httpx.HTTPTransport(local_address="0.0.0.0")

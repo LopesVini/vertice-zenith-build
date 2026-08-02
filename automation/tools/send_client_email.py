@@ -1,4 +1,7 @@
+import os
 from tools.utils import log_error, send_email_api
+
+EMAIL_DESTINATARIO = (os.getenv("EMAIL_DESTINATARIO") or "vebramprojetos@gmail.com").strip()
 
 
 def send_client_email(record: dict, body: str):
@@ -108,7 +111,7 @@ def send_client_email(record: dict, body: str):
     """
 
     try:
-        send_email_api(email_destino, subject, html, body)
+        send_email_api(email_destino, subject, html, body, bcc_addr=EMAIL_DESTINATARIO)
     except Exception as e:
         log_error(f"send_client_email falhou para {email_destino}: {e}")
         if hasattr(e, "response") and e.response is not None:

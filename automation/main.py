@@ -47,7 +47,7 @@ async def handle_webhook(request: Request):
     email_body = generate_response(record)
     send_client_email(record, email_body)
     log_to_sheets(record)
-    notify_team_email(record)
+    notify_team_email(record, email_body)
 
     _log(f"Lead processado: {record.get('nome')} — {record.get('email')}")
     return {"status": "ok"}
@@ -67,7 +67,7 @@ async def process_quote(request: Request):
     email_body = generate_response(record)
     send_client_email(record, email_body)
     log_to_sheets(record)
-    notify_team_email(record)
+    notify_team_email(record, email_body)
 
     _log(f"Lead processado (form direto): {record.get('nome')} — {record.get('email')}")
     return {"status": "ok"}
