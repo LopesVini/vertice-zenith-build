@@ -140,6 +140,7 @@ create table if not exists public.events (
   date date not null,
   type text not null,         -- 'ferias', 'ocupado', 'disponivel'
   note text,
+  color text,
   created_at timestamptz default now()
 );
 

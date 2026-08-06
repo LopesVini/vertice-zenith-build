@@ -6,101 +6,87 @@ import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { useScrollToTop } from "@/hooks/ui/useScrollToTop";
 
-// Imagens de exemplo do Unsplash conforme solicitado
+import fachadaImg from "@/assets/residencia-vebram-fachada.jpg";
+import gourmetImg from "@/assets/residencia-vebram-gourmet.jpg";
+import terracoImg from "@/assets/residencia-vebram-terraco.jpg";
+import jantarImg from "@/assets/residencia-vebram-jantar.jpg";
+import estarImg from "@/assets/residencia-vebram-estar.jpg";
+
 const projects = [
   {
     id: 1,
-    title: "Residência Alphaville",
-    category: "Projeto Completo",
-    image: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?q=80&w=2075&auto=format&fit=crop",
-    desc: "Integração total entre arquitetura moderna e rigor estrutural em um terreno com declive acentuado.",
-    images: [
-      "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?q=80&w=2075&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?q=80&w=2075&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1600566753376-12c8ab7fb75b?q=80&w=2070&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1600585154526-990dced4db0d?q=80&w=2070&auto=format&fit=crop"
-    ],
+    title: "Residência Vértice Contemporânea",
+    category: "Projeto Completo (Arquitetura + BIM + Estrutural)",
+    image: fachadaImg,
+    desc: "Design contemporâneo com fachada imponente em madeira e concreto aparente, iluminação cênica e garagem ampla.",
+    images: [fachadaImg, gourmetImg, terracoImg, jantarImg, estarImg],
     details: {
       clientName: "Roberto & Patrícia S.",
       testimonial: "A equipe da Vértice entregou o projeto completo de forma impecável. A compatibilização 3D BIM evitou qualquer surpresa no canteiro, gerando uma economia de cerca de 12% no custo de materiais de fundação e estrutura.",
       outcomeHighlight: "Obra concluída 15 dias antes do cronograma planejado devido à precisão do detalhamento executivo.",
       features: [
-        "Área: 420m²",
-        "Compatibilização BIM integrada",
-        "Aproveitamento solar otimizado",
-        "Estrutura sob declive acentuado"
+        "Área: 480m²",
+        "Fachada contemporânea com brises em madeira",
+        "Compatibilização BIM 3D integrada",
+        "Espaço gourmet completo com área de jogos",
+        "Terraço suíte master com vista panorâmica"
       ]
     }
   },
   {
     id: 2,
-    title: "Casa Vila da Serra",
-    category: "Projeto Estrutural",
-    image: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?q=80&w=2070&auto=format&fit=crop",
-    desc: "Cálculo estrutural avançado para vãos livres de 12 metros, garantindo a estética desejada pelo cliente.",
-    images: [
-      "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?q=80&w=2070&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?q=80&w=2070&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1600210491892-03d54c0aaf87?q=80&w=2070&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1513694203232-719a280e022f?q=80&w=2069&auto=format&fit=crop"
-    ],
+    title: "Espaço Gourmet & Lazer Residencial",
+    category: "Projeto Arquitetônico & Interiores",
+    image: gourmetImg,
+    desc: "Área externa integrada com bancada gourmet, salão de jogos com mesa de sinuca e revestimento em pedra natural.",
+    images: [gourmetImg, fachadaImg, terracoImg, jantarImg, estarImg],
     details: {
       clientName: "Construtora Horizonte",
-      testimonial: "Dimensionar grandes vãos livres com segurança e sem encarecer a obra é o maior diferencial deles. O projeto estrutural dialogou perfeitamente com a proposta minimalista do arquiteto.",
-      outcomeHighlight: "Economia de 18% no volume de concreto armado previsto inicialmente graças à otimização matemática das vigas.",
+      testimonial: "A integração dos ambientes sociais e o cálculo de vãos livres foram perfeitos. O ambiente atende perfeitamente ao conceito de receber bem.",
+      outcomeHighlight: "Aproveitamento de 100% da área externa com integração total entre churrasqueira e varanda.",
       features: [
-        "Vãos livres de 12m",
-        "Fundações profundas otimizadas",
-        "Integração perfeita com esquadrias minimalistas",
-        "Concreto aparente de alto desempenho"
+        "Vãos livres otimizados",
+        "Integração interna-externa",
+        "Paredes revestidas em pedra filetada",
+        "Iluminação embutida direcionada"
       ]
     }
   },
   {
     id: 3,
-    title: "Complexo Retiro das Pedras",
-    category: "Compatibilização",
-    image: "https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?q=80&w=2070&auto=format&fit=crop",
-    desc: "Compatibilização completa de projetos em uma área de preservação com rigorosas normas de prefeitura.",
-    images: [
-      "https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?q=80&w=2070&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1507089947368-19c1da9775ae?q=80&w=2070&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1616594039964-ae9021a400a0?q=80&w=2080&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1600573472591-ee6b68d14c68?q=80&w=2070&auto=format&fit=crop"
-    ],
+    title: "Suíte Master & Terraço Suíte",
+    category: "Projeto de Interiores & Cobertura",
+    image: terracoImg,
+    desc: "Terraço superior privativo com deck, iluminação indireta balizadora e guarda-corpo em vidro temperado.",
+    images: [terracoImg, fachadaImg, gourmetImg, jantarImg, estarImg],
     details: {
       clientName: "Cláudio & Heloísa M.",
-      testimonial: "Aprovar uma obra complexa em área de preservação exige muito rigor técnico. Com a compatibilização BIM nativa, todas as concessionárias e órgãos municipais aprovaram o projeto sem qualquer pendência na primeira submissão.",
-      outcomeHighlight: "Redução a zero (0%) de retrabalho ou reposicionamento de tubulações sanitárias no canteiro.",
+      testimonial: "O terraço da suíte master virou nosso refúgio diário. O projeto de iluminação noturna e o acabamento dos materiais ficaram espetaculares.",
+      outcomeHighlight: "Máxima privacidade e conforto térmico no pavimento superior.",
       features: [
-        "Compatibilização Hidro-Estrutural nativa",
-        "Aprovação ágil em órgãos de preservação",
-        "Sistemas ecológicos de tratamento de efluentes",
-        "Detalhamento 3D de instalações subterrâneas"
+        "Deck elevado em porcelanato antiderrapante",
+        "Paisagismo integrado com floreiras",
+        "Guarda-corpo panorâmico em vidro",
+        "Portas de correr com esquadrias de alto desempenho"
       ]
     }
   },
   {
     id: 4,
-    title: "Residência Pampulha",
-    category: "Projeto Arquitetônico",
-    image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=2070&auto=format&fit=crop",
-    desc: "Arquitetura contemporânea pensada para ventilação cruzada e eficiência energética.",
-    images: [
-      "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=2070&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1618219908412-a29a1bb7b86e?q=80&w=2072&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1600585154526-990dced4db0d?q=80&w=2070&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1552321554-5fefe8c9ef14?q=80&w=2070&auto=format&fit=crop"
-    ],
+    title: "Living & Sala de Jantar Integrada",
+    category: "Projeto de Interiores & Iluminação",
+    image: jantarImg,
+    desc: "Ambiente social amplo com mesa de jantar em madeira maciça, grandes panos de vidro e iluminação suave de teto.",
+    images: [jantarImg, estarImg, fachadaImg, gourmetImg, terracoImg],
     details: {
       clientName: "Família Vasconcellos",
-      testimonial: "O conforto térmico é incrível. Eles desenharam a residência aproveitando ao máximo a ventilação natural. Passamos o ano todo sem precisar ligar o ar-condicionado na sala e nos quartos, mesmo nos meses mais quentes.",
-      outcomeHighlight: "Economia estimada de 30% na conta de energia residencial graças a estratégias de iluminação e conforto passivo.",
+      testimonial: "A sensação de amplitude da sala de jantar com integração ao jardim de inverno é incrível. O conforto acústico e térmico superou nossas expectativas.",
+      outcomeHighlight: "Integração total dos ambientes de convivência familiar.",
       features: [
-        "Ventilação cruzada induzida",
-        "Iluminação zenital",
-        "Estética contemporânea com cobogós e brises",
-        "Integração total interna-externa"
+        "Piso em porcelanato acetinado grande formato",
+        "Esquadrias do piso ao teto",
+        "Iluminação em LED quente (3000K)",
+        "Integração com jardim interno"
       ]
     }
   }

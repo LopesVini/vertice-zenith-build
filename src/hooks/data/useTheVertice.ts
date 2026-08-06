@@ -214,13 +214,25 @@ export function useTheVertice() {
 
   const addEvent = async (date: string, type: string, note: string | null, color: string | null = null) => {
     if (!user) return { error: new Error("Usuário não autenticado") };
-    const { error } = await supabase.from("events").insert({
+    const payload: Record<string, string | null> = {
       user_id: user.id,
       date,
       type,
       note,
-      color,
-    });
+    };
+    if (color) {
+      payload.color = color;
+    }
+
+    let { error } = await supabase.from("events").insert(payload);
+
+    // Se o banco ainda não rodou a migration para adicionar a coluna color
+    if (error && error.message?.includes("color") && payload.color) {
+      delete payload.color;
+      const fallback = await supabase.from("events").insert(payload);
+      error = fallback.error;
+    }
+
     if (!error) fetchAll(true);
     return { error };
   };
